@@ -47,6 +47,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'arm_commander = octavius_bringup.arm_commander:main',
+            'keyboard_teleop = octavius_bringup.keyboard_teleop:main',
         ],
     },
 )

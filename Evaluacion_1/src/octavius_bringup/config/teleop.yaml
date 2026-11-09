@@ -1,0 +1,44 @@
+# Parámetros de teleoperación de Octavius.
+# Los lee el nodo arm_commander (octavius_bringup/arm_commander.py).
+
+arm_commander:
+  ros__parameters:
+    # Orden de los 5 ángulos que espera /arm_controller/commands.
+    # Debe coincidir con "joints" de arm_controller en controllers.yaml.
+    arm_joints:
+      - base_joint
+      - shoulder_joint
+      - elbow_joint
+      - wrist_pitch_joint
+      - wrist_roll_joint
+
+    # Frecuencia del lazo del nodo [Hz] → Δt = 1 / rate_hz = 0.02 s
+    rate_hz: 50.0
+
+    # ----- Joystick (ESP32 vía micro-ROS), modo velocidad -----
+    # axes[0] (eje X) → base, axes[1] (eje Y) → hombro
+    joystick_joints: [base_joint, shoulder_joint]
+    # Signo de cada eje: -1.0 invierte el sentido si el joystick quedó
+    # montado al revés.
+    joystick_axis_sign: [1.0, 1.0]
+    # Velocidad articular con el joystick a tope [rad/s]
+    joystick_max_velocity: 0.5
+    # Lecturas con |v| menor que esto se toman como 0
+    joystick_deadzone: 0.1
+    # Sin mensajes del joystick por más de esto [s] → se detienen base y hombro
+    joystick_timeout: 0.5
+
+    # ----- Teclado, modo paso -----
+    # axes[0] → codo (w/s), axes[1] → muñeca pitch (r/f), axes[2] → muñeca roll (q/e)
+    keyboard_joints: [elbow_joint, wrist_pitch_joint, wrist_roll_joint]
+    # Ángulo que avanza la articulación por cada pulsación [rad] (≈ 2,9°)
+    keyboard_step: 0.05
+
+    # ----- Pose home (tecla h) -----
+    # Velocidad con que todas las articulaciones vuelven a 0 [rad/s]
+    home_velocity: 0.5
+
+    # ----- Garra (tecla a) -----
+    gripper_joint: gripper_joint
+    gripper_open: 0.02    # apertura de cada dedo [m]
+    gripper_closed: 0.0

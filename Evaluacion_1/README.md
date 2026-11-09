@@ -52,13 +52,16 @@ ros2 launch octavius_description display.launch.py
 
 Se abre RViz con el brazo y la ventana *Joint State Publisher* con un slider por articulación. Al mover un slider se mueve el modelo y su TF.
 
-### 4.2 Simulación completa en Gazebo + RViz
+### 4.2 Simulación completa (Gazebo + RViz + control)
 
 ```bash
-ros2 launch octavius_bringup gazebo.launch.py
+ros2 launch octavius_bringup bringup.launch.py
 ```
 
-Argumentos opcionales (ver todos con `ros2 launch octavius_bringup gazebo.launch.py --show-args`):
+Levanta Gazebo, los controladores, RViz y el nodo `arm_commander`, que recibe los comandos del teclado y del joystick.
+(`gazebo.launch.py` levanta lo mismo pero sin `arm_commander`.)
+
+Argumentos opcionales (ver todos con `ros2 launch octavius_bringup bringup.launch.py --show-args`):
 
 | Argumento | Defecto | Descripción |
 |---|---|---|
@@ -66,9 +69,34 @@ Argumentos opcionales (ver todos con `ros2 launch octavius_bringup gazebo.launch
 | `headless` | `false` | Gazebo sin interfaz gráfica |
 | `world` | `workcell.sdf` | Mundo de Gazebo |
 
-### 4.3 Mover el brazo a mano (prueba de los controladores)
+### 4.3 Control por teclado
 
-Con la simulación corriendo, en otra terminal:
+En **otra terminal** (el nodo necesita leer el teclado, por eso no va dentro del launch):
+
+```bash
+source install/setup.bash
+ros2 run octavius_bringup keyboard_teleop
+```
+
+| Tecla | Acción |
+|---|---|
+| `w` / `s` | Codo arriba / abajo |
+| `r` / `f` | Muñeca pitch arriba / abajo |
+| `q` / `e` | Girar la garra |
+| `a` | Abrir / cerrar garra |
+| `h` | Volver a home (todas las articulaciones a 0) |
+
+Cada pulsación mueve 0,05 rad (≈ 2,9°). Mantener la tecla presionada repite el paso. La base y el hombro se controlan con el joystick de la ESP32 (Fase 4).
+
+Sin la ESP32, el joystick se puede simular publicando a mano (eje X → base, eje Y → hombro, valores entre -1 y 1):
+
+```bash
+ros2 topic pub -r 20 /octavius/joystick sensor_msgs/msg/Joy "{axes: [0.5, 0.0]}"
+```
+
+### 4.4 Mover el brazo directo a los controladores (sin arm_commander)
+
+Con `gazebo.launch.py` corriendo, en otra terminal:
 
 ```bash
 # Brazo: 5 ángulos [rad] en orden base, hombro, codo, muñeca pitch, muñeca roll
@@ -98,8 +126,10 @@ Evaluacion_1/
     │   ├── launch/display.launch.py
     │   └── rviz/display.rviz
     └── octavius_bringup/          simulación y control
-        ├── launch/gazebo.launch.py
-        ├── config/                controladores, bridge Gazebo↔ROS, RViz
+        ├── launch/                bringup.launch.py (principal) y gazebo.launch.py
+        ├── octavius_bringup/      nodos: arm_commander, keyboard_teleop, arm_logic (cálculos)
+        ├── config/                controladores, teleoperación, bridge Gazebo↔ROS, RViz
+        ├── test/                  tests unitarios y linters
         └── worlds/workcell.sdf    mesa con objetos
 ```
 
@@ -110,8 +140,8 @@ Evaluacion_1/
 | 0 — Workspace y paquetes | ✅ |
 | 1 — Modelo URDF/XACRO + RViz | ✅ |
 | 2 — Gazebo + ros2_control | ✅ |
-| 3 — Teclado + `arm_commander` | ⏳ |
+| 3 — Teclado + `arm_commander` | ✅ |
 | 4 — micro-ROS + joystick | ⏳ |
-| 5 — Launch integrado | ⏳ |
+| 5 — Launch integrado | 🟡 `bringup.launch.py` creado; falta sumar el agente micro-ROS |
 | 6 — Sensores básicos (cámara + IMU) | ✅ adelantada: publican y se ven en RViz |
 | 7–8 — Calidad, documentación y entrega | ⏳ |
