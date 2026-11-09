@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<!--
+  Declaración del hardware para ros2_control.
+
+  El bloque <ros2_control> le dice al controller_manager qué articulaciones
+  existen y qué INTERFACES ofrece cada una:
+
+    command_interface "position" → lo que se le ordena: ángulo objetivo [rad]
+                                   (en la garra, apertura del dedo [m])
+    state_interface   "position" → lo que se mide: ángulo actual
+    state_interface   "velocity" → lo que se mide: velocidad actual
+
+  El <plugin> del hardware es gz_ros2_control/GazeboSimSystem: en vez de
+  hablar con motores reales, lee y escribe las juntas de la simulación.
+  Con interfaz de posición, el propio plugin cierra el lazo y lleva la junta
+  al ángulo pedido; por eso no se configura un PID en los controladores.
+
+  El dedo derecho (gripper_mimic_joint) es una junta <mimic> del URDF.
+  En ros2_control (Jazzy) igual debe declararse aquí, pero SOLO con
+  interfaces de estado: no recibe comandos propios, y el hardware de
+  Gazebo la mueve copiando a gripper_joint según la regla <mimic>.
+  Si no se declara, RViz la dibuja bien pero en Gazebo el dedo no se mueve.
+
+  Argumento:
+    controllers_file  ruta absoluta del YAML con los controladores. La
+                      entrega el launch de Gazebo (octavius_bringup).
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="position_joint" params="name">
+    <joint name="${name}">
+      <command_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="octavius_ros2_control" params="controllers_file">
+
+    <ros2_control name="OctaviusGazeboSystem" type="system">
+      <hardware>
+        <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+      </hardware>
+      <xacro:position_joint name="base_joint"/>
+      <xacro:position_joint name="shoulder_joint"/>
+      <xacro:position_joint name="elbow_joint"/>
+      <xacro:position_joint name="wrist_pitch_joint"/>
+      <xacro:position_joint name="wrist_roll_joint"/>
+      <xacro:position_joint name="gripper_joint"/>
+      <joint name="gripper_mimic_joint">
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+    </ros2_control>
+
+    <!--
+      Plugin de Gazebo que levanta un controller_manager dentro de la
+      simulación, usando el robot_description publicado por
+      robot_state_publisher y los controladores de controllers_file.
+    -->
+    <gazebo>
+      <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <parameters>${controllers_file}</parameters>
+      </plugin>
+    </gazebo>
+
+  </xacro:macro>
+
+</robot>

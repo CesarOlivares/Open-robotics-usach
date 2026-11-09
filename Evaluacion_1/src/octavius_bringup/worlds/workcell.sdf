@@ -1,0 +1,170 @@
+<?xml version="1.0" ?>
+<!--
+  Celda de trabajo de Octavius: suelo, una mesa y algunos objetos.
+
+  Todo está hecho con primitivas (cajas y cilindros): el mundo no descarga
+  modelos de internet, así funciona sin conexión en cualquier PC.
+
+  La superficie de la mesa está a z = 0.75 m. El launch aparece el brazo
+  justo ahí, en el centro de la mesa.
+-->
+<sdf version="1.10">
+  <world name="workcell">
+
+    <!-- Paso de integración de 1 ms, en tiempo real (factor 1.0) -->
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <!--
+      Sistemas (plugins) del mundo. Sin ellos Gazebo no simula ni publica:
+        Physics          integra la dinámica (gravedad, juntas, choques)
+        UserCommands     permite crear/mover modelos (lo usa ros_gz_sim create)
+        SceneBroadcaster envía la escena a la interfaz gráfica
+        Sensors          renderiza los sensores de imagen (la cámara)
+        Imu              calcula las lecturas de los sensores IMU
+    -->
+    <!--
+      Motor de física: Bullet Featherstone en vez de DART (el predeterminado).
+      Motivo: la garra usa una junta <mimic> (el dedo derecho copia al
+      izquierdo) y DART no implementa restricciones mimic en Gazebo Harmonic.
+    -->
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics">
+      <engine>
+        <filename>gz-physics-bullet-featherstone-plugin</filename>
+      </engine>
+    </plugin>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+
+    <gravity>0 0 -9.81</gravity>
+    <scene>
+      <ambient>0.6 0.6 0.6 1</ambient>
+      <background>0.75 0.8 0.85 1</background>
+      <grid>false</grid>
+    </scene>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.9 0.9 0.9 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.2 -0.9</direction>
+    </light>
+
+    <!-- ===== Suelo ===== -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal><size>20 20</size></plane></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><plane><normal>0 0 1</normal><size>20 20</size></plane></geometry>
+          <material>
+            <ambient>0.55 0.55 0.55 1</ambient>
+            <diffuse>0.55 0.55 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ===== Mesa: cubierta de 1.0 x 0.8 m a 0.75 m de altura ===== -->
+    <model name="table">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <collision name="top_collision">
+          <pose>0 0 0.73 0 0 0</pose>
+          <geometry><box><size>1.0 0.8 0.04</size></box></geometry>
+        </collision>
+        <visual name="top_visual">
+          <pose>0 0 0.73 0 0 0</pose>
+          <geometry><box><size>1.0 0.8 0.04</size></box></geometry>
+          <material>
+            <ambient>0.55 0.38 0.22 1</ambient>
+            <diffuse>0.55 0.38 0.22 1</diffuse>
+          </material>
+        </visual>
+        <visual name="leg_1">
+          <pose>0.45 0.35 0.355 0 0 0</pose>
+          <geometry><box><size>0.05 0.05 0.71</size></box></geometry>
+          <material><ambient>0.2 0.2 0.2 1</ambient><diffuse>0.2 0.2 0.2 1</diffuse></material>
+        </visual>
+        <visual name="leg_2">
+          <pose>-0.45 0.35 0.355 0 0 0</pose>
+          <geometry><box><size>0.05 0.05 0.71</size></box></geometry>
+          <material><ambient>0.2 0.2 0.2 1</ambient><diffuse>0.2 0.2 0.2 1</diffuse></material>
+        </visual>
+        <visual name="leg_3">
+          <pose>0.45 -0.35 0.355 0 0 0</pose>
+          <geometry><box><size>0.05 0.05 0.71</size></box></geometry>
+          <material><ambient>0.2 0.2 0.2 1</ambient><diffuse>0.2 0.2 0.2 1</diffuse></material>
+        </visual>
+        <visual name="leg_4">
+          <pose>-0.45 -0.35 0.355 0 0 0</pose>
+          <geometry><box><size>0.05 0.05 0.71</size></box></geometry>
+          <material><ambient>0.2 0.2 0.2 1</ambient><diffuse>0.2 0.2 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ===== Objetos sobre la mesa, al alcance del brazo ===== -->
+    <model name="red_cube">
+      <pose>0.30 0.10 0.77 0 0 0</pose>
+      <link name="link">
+        <inertial>
+          <mass>0.05</mass>
+          <inertia><ixx>1.33e-5</ixx><iyy>1.33e-5</iyy><izz>1.33e-5</izz></inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry><box><size>0.04 0.04 0.04</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.04 0.04 0.04</size></box></geometry>
+          <material><ambient>0.85 0.1 0.1 1</ambient><diffuse>0.85 0.1 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="blue_cylinder">
+      <pose>0.25 -0.18 0.78 0 0 0</pose>
+      <link name="link">
+        <inertial>
+          <mass>0.05</mass>
+          <inertia><ixx>1.5e-5</ixx><iyy>1.5e-5</iyy><izz>1.0e-5</izz></inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry><cylinder><radius>0.02</radius><length>0.06</length></cylinder></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.02</radius><length>0.06</length></cylinder></geometry>
+          <material><ambient>0.1 0.3 0.9 1</ambient><diffuse>0.1 0.3 0.9 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="green_cube">
+      <pose>-0.15 0.28 0.77 0 0 0.5</pose>
+      <link name="link">
+        <inertial>
+          <mass>0.05</mass>
+          <inertia><ixx>1.33e-5</ixx><iyy>1.33e-5</iyy><izz>1.33e-5</izz></inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry><box><size>0.04 0.04 0.04</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.04 0.04 0.04</size></box></geometry>
+          <material><ambient>0.1 0.7 0.2 1</ambient><diffuse>0.1 0.7 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>

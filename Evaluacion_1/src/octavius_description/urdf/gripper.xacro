@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<!--
+  Muñeca roll (articulación 5) y garra de dos dedos (articulación 6).
+
+    wrist_link ─(5) wrist_roll_joint─► gripper_base_link   gira la garra sobre su propio eje (Z)
+    gripper_base_link ─(6) gripper_joint──────► finger_left_link    dedo controlado (prismático, eje +Y)
+    gripper_base_link ─ gripper_mimic_joint ──► finger_right_link   dedo espejo (prismático, eje -Y)
+
+  Abrir/cerrar la garra es UNA sola articulación: gripper_joint.
+  El dedo derecho usa <mimic>: su posición siempre es
+      q_derecho = multiplier · q_izquierdo + offset = 1 · q_izquierdo
+  y como su eje apunta a -Y, se mueve en espejo. No se controla por separado.
+
+  q = 0      → garra cerrada
+  q = 0.025  → garra abierta (cada dedo se separa 2,5 cm)
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="finger_link" params="name">
+    <link name="${name}">
+      <visual>
+        <origin xyz="0 0 ${finger_z/2}" rpy="0 0 0"/>
+        <geometry><box size="${finger_x} ${finger_y} ${finger_z}"/></geometry>
+        <material name="octavius_dark"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 ${finger_z/2}" rpy="0 0 0"/>
+        <geometry><box size="${finger_x} ${finger_y} ${finger_z}"/></geometry>
+      </collision>
+      <xacro:box_inertial m="${finger_mass}" x="${finger_x}" y="${finger_y}" z="${finger_z}">
+        <origin xyz="0 0 ${finger_z/2}" rpy="0 0 0"/>
+      </xacro:box_inertial>
+    </link>
+  </xacro:macro>
+
+  <xacro:macro name="octavius_gripper" params="parent">
+
+    <!-- ===== (5) Muñeca: giro (roll) ===== -->
+    <joint name="wrist_roll_joint" type="revolute">
+      <parent link="${parent}"/>
+      <child link="gripper_base_link"/>
+      <origin xyz="0 0 ${wrist_length}" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="${wrist_roll_lower}" upper="${wrist_roll_upper}"
+             velocity="${joint_velocity}" effort="${joint_effort}"/>
+      <dynamics damping="${joint_damping}" friction="${joint_friction}"/>
+    </joint>
+
+    <link name="gripper_base_link">
+      <visual>
+        <origin xyz="0 0 ${gripper_base_z/2}" rpy="0 0 0"/>
+        <geometry><box size="${gripper_base_x} ${gripper_base_y} ${gripper_base_z}"/></geometry>
+        <material name="octavius_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 ${gripper_base_z/2}" rpy="0 0 0"/>
+        <geometry><box size="${gripper_base_x} ${gripper_base_y} ${gripper_base_z}"/></geometry>
+      </collision>
+      <xacro:box_inertial m="${gripper_base_mass}" x="${gripper_base_x}" y="${gripper_base_y}" z="${gripper_base_z}">
+        <origin xyz="0 0 ${gripper_base_z/2}" rpy="0 0 0"/>
+      </xacro:box_inertial>
+    </link>
+
+    <!-- ===== (6) Garra: dedo izquierdo (el que se controla) ===== -->
+    <joint name="gripper_joint" type="prismatic">
+      <parent link="gripper_base_link"/>
+      <child link="finger_left_link"/>
+      <origin xyz="0 ${finger_closed_offset + finger_y/2} ${gripper_base_z}" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="${gripper_lower}" upper="${gripper_upper}"
+             velocity="${gripper_velocity}" effort="${gripper_effort}"/>
+      <dynamics damping="1.0" friction="0.1"/>
+    </joint>
+    <xacro:finger_link name="finger_left_link"/>
+
+    <!-- Dedo derecho: copia al izquierdo con <mimic>, en sentido contrario -->
+    <joint name="gripper_mimic_joint" type="prismatic">
+      <parent link="gripper_base_link"/>
+      <child link="finger_right_link"/>
+      <origin xyz="0 ${-(finger_closed_offset + finger_y/2)} ${gripper_base_z}" rpy="0 0 0"/>
+      <axis xyz="0 -1 0"/>
+      <limit lower="${gripper_lower}" upper="${gripper_upper}"
+             velocity="${gripper_velocity}" effort="${gripper_effort}"/>
+      <dynamics damping="1.0" friction="0.1"/>
+      <mimic joint="gripper_joint" multiplier="1" offset="0"/>
+    </joint>
+    <xacro:finger_link name="finger_right_link"/>
+
+  </xacro:macro>
+
+</robot>

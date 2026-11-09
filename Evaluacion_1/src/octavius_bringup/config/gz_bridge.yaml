@@ -1,0 +1,36 @@
+# Configuración de ros_gz_bridge (parameter_bridge).
+#
+# Gazebo y ROS 2 tienen sistemas de mensajes distintos (gz-transport y DDS).
+# Cada entrada crea un puente para un tópico:
+#   ros_topic_name / gz_topic_name  nombre del tópico en cada lado
+#   ros_type_name  / gz_type_name   tipo de mensaje en cada lado
+#   direction                       GZ_TO_ROS: Gazebo publica, ROS recibe
+
+# Reloj de la simulación. Todos los nodos con use_sim_time:=true usan este
+# tiempo en vez del reloj del PC, así los datos de sensores y la TF coinciden.
+- ros_topic_name: "/clock"
+  gz_topic_name: "/clock"
+  ros_type_name: "rosgraph_msgs/msg/Clock"
+  gz_type_name: "gz.msgs.Clock"
+  direction: GZ_TO_ROS
+
+# SENSOR 1: cámara de la garra — imagen RGB
+- ros_topic_name: "/octavius/camera/image"
+  gz_topic_name: "/octavius/camera/image"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "gz.msgs.Image"
+  direction: GZ_TO_ROS
+
+# SENSOR 1: cámara de la garra — parámetros intrínsecos (focal, centro óptico)
+- ros_topic_name: "/octavius/camera/camera_info"
+  gz_topic_name: "/octavius/camera/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "gz.msgs.CameraInfo"
+  direction: GZ_TO_ROS
+
+# SENSOR 2: IMU de la muñeca — orientación, velocidad angular, aceleración
+- ros_topic_name: "/octavius/imu"
+  gz_topic_name: "/octavius/imu"
+  ros_type_name: "sensor_msgs/msg/Imu"
+  gz_type_name: "gz.msgs.IMU"
+  direction: GZ_TO_ROS

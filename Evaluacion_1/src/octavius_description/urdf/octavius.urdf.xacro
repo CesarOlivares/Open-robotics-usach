@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<!--
+  Octavius — brazo manipulador de 6 articulaciones.
+  Archivo principal: solo une las piezas definidas en los demás .xacro.
+
+    octavius_params.xacro   dimensiones, masas y límites (único lugar a editar)
+    macros/inertial.xacro   fórmulas de inercia
+    arm.xacro               base + articulaciones 1 a 4
+    gripper.xacro           articulación 5 (muñeca roll) + garra (articulación 6)
+    sensors.xacro           cámara y IMU con sus plugins de Gazebo
+    ros2_control.xacro      interfaces de control para gz_ros2_control
+
+  Para ver el URDF resultante:
+    xacro octavius.urdf.xacro > /tmp/octavius.urdf && check_urdf /tmp/octavius.urdf
+
+  Argumentos:
+    controllers_file  YAML de controladores (solo lo usa Gazebo).
+-->
+<robot name="octavius" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:arg name="controllers_file" default=""/>
+
+  <xacro:include filename="$(find octavius_description)/urdf/octavius_params.xacro"/>
+  <xacro:include filename="$(find octavius_description)/urdf/macros/inertial.xacro"/>
+  <xacro:include filename="$(find octavius_description)/urdf/arm.xacro"/>
+  <xacro:include filename="$(find octavius_description)/urdf/gripper.xacro"/>
+  <xacro:include filename="$(find octavius_description)/urdf/sensors.xacro"/>
+  <xacro:include filename="$(find octavius_description)/urdf/ros2_control.xacro"/>
+
+  <!-- Colores (RGBA). Gazebo los toma al convertir el URDF a SDF. -->
+  <material name="octavius_orange"><color rgba="0.95 0.45 0.10 1.0"/></material>
+  <material name="octavius_dark"><color rgba="0.15 0.15 0.17 1.0"/></material>
+  <material name="octavius_grey"><color rgba="0.60 0.62 0.65 1.0"/></material>
+  <material name="octavius_blue"><color rgba="0.15 0.35 0.85 1.0"/></material>
+  <material name="octavius_green"><color rgba="0.10 0.70 0.30 1.0"/></material>
+
+  <!--
+    "world" es el frame fijo del entorno. Unir base_link a world con una
+    junta fija ancla el brazo: en Gazebo queda atornillado a la mesa.
+  -->
+  <link name="world"/>
+
+  <xacro:octavius_arm parent="world"/>
+  <xacro:octavius_gripper parent="wrist_link"/>
+  <xacro:octavius_sensors camera_parent="gripper_base_link" imu_parent="wrist_link"/>
+  <xacro:octavius_ros2_control controllers_file="$(arg controllers_file)"/>
+
+</robot>

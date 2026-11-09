@@ -1,0 +1,42 @@
+# Controladores de ros2_control para Octavius.
+#
+# Lo lee el controller_manager que levanta el plugin gz_ros2_control dentro
+# de Gazebo (ver ros2_control.xacro). Los controladores se activan desde el
+# launch con el "spawner" de controller_manager.
+#
+# Todos son de paquetes oficiales de ros2_controllers (control.ros.org).
+
+controller_manager:
+  ros__parameters:
+    # Frecuencia del lazo de control [Hz]: cada 10 ms se leen las interfaces
+    # de estado, se ejecutan los controladores y se escriben los comandos.
+    update_rate: 100
+
+    # Publica /joint_states con la posición y velocidad medidas de cada
+    # articulación. robot_state_publisher lo usa para la TF y RViz.
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    # Brazo (articulaciones 1-5). Recibe en /arm_controller/commands un
+    # std_msgs/Float64MultiArray con 5 ángulos [rad], en el orden de "joints",
+    # y los copia tal cual a las interfaces de comando "position".
+    arm_controller:
+      type: position_controllers/JointGroupPositionController
+
+    # Garra (articulación 6). Igual, con 1 valor: apertura del dedo [m].
+    gripper_controller:
+      type: position_controllers/JointGroupPositionController
+
+arm_controller:
+  ros__parameters:
+    joints:
+      - base_joint
+      - shoulder_joint
+      - elbow_joint
+      - wrist_pitch_joint
+      - wrist_roll_joint
+
+gripper_controller:
+  ros__parameters:
+    joints:
+      - gripper_joint

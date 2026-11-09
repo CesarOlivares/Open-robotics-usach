@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+<!--
+  Sensores montados en el brazo.
+
+  Cada sensor tiene dos partes:
+    1. Un <link> + <joint fixed>: ubica físicamente el sensor en el robot.
+       robot_state_publisher lo publica en la TF, así RViz sabe dónde está.
+    2. Un bloque <gazebo reference="link">: declara el sensor para Gazebo.
+       Los datos los genera el sistema de sensores del mundo
+       (gz-sim-sensors-system y gz-sim-imu-system, en worlds/workcell.sdf)
+       y se publican en un tópico de Gazebo. Para verlos en ROS hay que
+       pasarlos por ros_gz_bridge (config/gz_bridge.yaml de octavius_bringup).
+
+  SENSOR 1 — Cámara RGB en la garra ("eye-in-hand")
+    Gazebo: octavius/camera/image, octavius/camera/camera_info
+    Una cámara de Gazebo mira hacia el +X de su link. Se gira -90° en Y para
+    que mire hacia +Z de la garra, es decir, hacia donde apuntan los dedos.
+
+  SENSOR 2 — IMU en la muñeca
+    Gazebo: octavius/imu
+    Mide orientación, velocidad angular y aceleración lineal de wrist_link.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:property name="camera_size"   value="0.02"/>
+  <xacro:property name="camera_mass"   value="0.01"/>
+  <xacro:property name="imu_size"      value="0.012"/>
+  <xacro:property name="imu_mass"      value="0.005"/>
+
+  <xacro:macro name="octavius_sensors" params="camera_parent imu_parent">
+
+    <!-- =================== SENSOR 1: cámara =================== -->
+    <joint name="camera_joint" type="fixed">
+      <parent link="${camera_parent}"/>
+      <child link="camera_link"/>
+      <!-- Pegada a la cara +X de la base de la garra, mirando hacia +Z -->
+      <origin xyz="${gripper_base_x/2 + camera_size/2} 0 ${gripper_base_z/2}" rpy="0 ${-PI/2} 0"/>
+    </joint>
+
+    <link name="camera_link">
+      <visual>
+        <geometry><box size="${camera_size} ${camera_size*1.5} ${camera_size}"/></geometry>
+        <material name="octavius_blue"/>
+      </visual>
+      <collision>
+        <geometry><box size="${camera_size} ${camera_size*1.5} ${camera_size}"/></geometry>
+      </collision>
+      <xacro:box_inertial m="${camera_mass}" x="${camera_size}" y="${camera_size*1.5}" z="${camera_size}">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:box_inertial>
+    </link>
+
+    <!--
+      Frame óptico (REP-103): Z hacia adelante, X a la derecha, Y hacia abajo.
+      Es la convención que esperan los mensajes sensor_msgs/Image y CameraInfo,
+      distinta de la del link (X adelante, Z arriba).
+    -->
+    <joint name="camera_optical_joint" type="fixed">
+      <parent link="camera_link"/>
+      <child link="camera_optical_link"/>
+      <origin xyz="0 0 0" rpy="${-PI/2} 0 ${-PI/2}"/>
+    </joint>
+    <link name="camera_optical_link"/>
+
+    <gazebo reference="camera_link">
+      <sensor name="wrist_camera" type="camera">
+        <always_on>true</always_on>
+        <update_rate>15</update_rate>
+        <visualize>true</visualize>
+        <topic>octavius/camera/image</topic>
+        <!-- frame_id que llevarán los mensajes: el frame óptico -->
+        <gz_frame_id>camera_optical_link</gz_frame_id>
+        <camera>
+          <camera_info_topic>octavius/camera/camera_info</camera_info_topic>
+          <horizontal_fov>1.047</horizontal_fov>  <!-- 60° -->
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.02</near>
+            <far>10.0</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+        </camera>
+      </sensor>
+    </gazebo>
+
+    <!-- =================== SENSOR 2: IMU =================== -->
+    <joint name="imu_joint" type="fixed">
+      <parent link="${imu_parent}"/>
+      <child link="imu_link"/>
+      <!-- Sobre la superficie de la muñeca, a media altura -->
+      <origin xyz="${wrist_radius + imu_size/2} 0 ${wrist_length/2}" rpy="0 0 0"/>
+    </joint>
+
+    <link name="imu_link">
+      <visual>
+        <geometry><box size="${imu_size} ${imu_size} ${imu_size}"/></geometry>
+        <material name="octavius_green"/>
+      </visual>
+      <xacro:box_inertial m="${imu_mass}" x="${imu_size}" y="${imu_size}" z="${imu_size}">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:box_inertial>
+    </link>
+
+    <gazebo reference="imu_link">
+      <sensor name="wrist_imu" type="imu">
+        <always_on>true</always_on>
+        <update_rate>100</update_rate>
+        <topic>octavius/imu</topic>
+        <gz_frame_id>imu_link</gz_frame_id>
+      </sensor>
+    </gazebo>
+
+  </xacro:macro>
+
+</robot>
