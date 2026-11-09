@@ -68,6 +68,9 @@ Argumentos opcionales (ver todos con `ros2 launch octavius_bringup bringup.launc
 | `use_rviz` | `true` | Abrir RViz |
 | `headless` | `false` | Gazebo sin interfaz gráfica |
 | `world` | `workcell.sdf` | Mundo de Gazebo |
+| `use_microros` | `false` | Lanzar el agente micro-ROS (joystick de la ESP32) |
+| `serial_port` | `/dev/ttyUSB0` | Puerto serial de la ESP32 |
+| `agent` | `native` | Agente micro-ROS: `native` (compilado) o `docker` |
 
 ### 4.3 Control por teclado
 
@@ -106,6 +109,45 @@ ros2 topic pub --once /arm_controller/commands std_msgs/msg/Float64MultiArray "{
 ros2 topic pub --once /gripper_controller/commands std_msgs/msg/Float64MultiArray "{data: [0.02]}"
 ```
 
+### 4.5 Joystick con la ESP32 (micro-ROS)
+
+Circuito, explicación del procesamiento y carga del firmware: [`docs/circuito_joystick.md`](docs/circuito_joystick.md).
+
+**a) Agente micro-ROS.** Es el programa del PC que conecta la ESP32 con ROS 2. Hay dos opciones:
+
+*Opción 1: compilarlo* (tutorial oficial de micro-ROS; se hace una sola vez, en un workspace aparte):
+
+```bash
+mkdir -p ~/microros_ws/src && cd ~/microros_ws
+git clone -b jazzy https://github.com/micro-ROS/micro_ros_setup.git src/micro_ros_setup
+source /opt/ros/jazzy/setup.bash
+rosdep update && rosdep install --from-paths src --ignore-src -y
+colcon build && source install/local_setup.bash
+ros2 run micro_ros_setup create_agent_ws.sh
+ros2 run micro_ros_setup build_agent.sh
+```
+
+Después, en cada terminal donde se lance Octavius con el joystick: `source ~/microros_ws/install/local_setup.bash`.
+
+*Opción 2: Docker*, sin compilar. Se usa agregando `agent:=docker` al launch; la primera vez descarga la imagen oficial `microros/micro-ros-agent:jazzy`.
+
+**b) Lanzar** con la ESP32 conectada por USB:
+
+```bash
+source ~/microros_ws/install/local_setup.bash     # solo con la opción 1
+source install/setup.bash
+ros2 launch octavius_bringup bringup.launch.py use_microros:=true
+```
+
+Si la placa aparece en otro puerto: `serial_port:=/dev/ttyACM0` (para verlo: `ls /dev/ttyUSB* /dev/ttyACM*`).
+
+El LED de la ESP32 pasa de parpadear a quedar fijo cuando se conecta. Para comprobarlo:
+
+```bash
+ros2 node list                    # aparece /octavius_joystick
+ros2 topic hz /octavius/joystick  # ~20 Hz
+```
+
 ## 5. Verificación rápida
 
 ```bash
@@ -114,12 +156,24 @@ ros2 topic hz /octavius/camera/image   # cámara, ~15 Hz
 ros2 topic hz /octavius/imu            # IMU, ~100 Hz
 ```
 
-## 6. Estructura
+## 6. Problemas frecuentes
+
+| Síntoma | Causa / solución |
+|---|---|
+| `No se encontró el paquete micro_ros_agent` | Falta `source ~/microros_ws/install/local_setup.bash`, o usar `agent:=docker` |
+| El agente no abre el puerto (`Permission denied`) | El usuario no está en el grupo `dialout`: `sudo usermod -aG dialout $USER` y volver a iniciar sesión |
+| El LED sigue parpadeando | Puerto equivocado (`serial_port:=...`), o el Monitor Serie del Arduino IDE sigue abierto |
+| El brazo se mueve solo con el joystick suelto | Se tocó el joystick mientras la ESP32 arrancaba (calibración). Reiniciar la placa sin tocarlo |
+| Al cerrar con Ctrl+C aparece `gazebo-1 ... exit code -2` o `micro_ros_agent ... exit code -2` | Normal: Gazebo (`gz sim`) y el agente micro-ROS terminan por la propia señal de Ctrl+C en vez de capturarla. No es un error del proyecto |
+
+## 7. Estructura
 
 ```
 Evaluacion_1/
 ├── README.md
 ├── PLAN_DE_TRABAJO.md
+├── docs/circuito_joystick.md      circuito, procesamiento de la señal y carga del firmware
+├── firmware/octavius_joystick/    firmware de la ESP32 (micro_ros_arduino)
 └── src/
     ├── octavius_description/      modelo URDF/XACRO + RViz
     │   ├── urdf/                  octavius.urdf.xacro (principal) y sus partes
@@ -133,7 +187,7 @@ Evaluacion_1/
         └── worlds/workcell.sdf    mesa con objetos
 ```
 
-## 7. Estado del proyecto
+## 8. Estado del proyecto
 
 | Fase | Estado |
 |---|---|
@@ -141,7 +195,7 @@ Evaluacion_1/
 | 1 — Modelo URDF/XACRO + RViz | ✅ |
 | 2 — Gazebo + ros2_control | ✅ |
 | 3 — Teclado + `arm_commander` | ✅ |
-| 4 — micro-ROS + joystick | ⏳ |
-| 5 — Launch integrado | 🟡 `bringup.launch.py` creado; falta sumar el agente micro-ROS |
+| 4 — micro-ROS + joystick | 🟡 firmware compilado sin advertencias y agente probado; falta la prueba con la ESP32 conectada |
+| 5 — Launch integrado | ✅ `bringup.launch.py` (con `use_microros:=true` suma el agente) |
 | 6 — Sensores básicos (cámara + IMU) | ✅ adelantada: publican y se ven en RViz |
 | 7–8 — Calidad, documentación y entrega | ⏳ |

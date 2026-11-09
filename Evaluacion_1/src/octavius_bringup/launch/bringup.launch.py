@@ -16,8 +16,10 @@
 Launch principal de Octavius: simulación + control por joystick y teclado.
 
 Incluye:
-    gazebo.launch.py   Gazebo, robot, controladores, sensores y RViz
-    arm_commander      une joystick y teclado en el comando del brazo
+    gazebo.launch.py          Gazebo, robot, controladores, sensores y RViz
+    arm_commander             une joystick y teclado en el comando del brazo
+    microros_agent.launch.py  (con use_microros:=true) agente micro-ROS
+                              que conecta la ESP32 con el joystick
 
 El teclado NO se lanza aquí: necesita leer una terminal, así que se abre
 aparte (igual que teleop_twist_keyboard en la documentación oficial):
@@ -25,7 +27,8 @@ aparte (igual que teleop_twist_keyboard en la documentación oficial):
 
 Uso:
     ros2 launch octavius_bringup bringup.launch.py
-    ros2 launch octavius_bringup bringup.launch.py use_rviz:=false
+    ros2 launch octavius_bringup bringup.launch.py use_microros:=true
+    ros2 launch octavius_bringup bringup.launch.py use_microros:=true serial_port:=/dev/ttyACM0
 """
 
 import os
@@ -33,6 +36,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
@@ -53,6 +57,16 @@ def generate_launch_description():
         }.items(),
     )
 
+    microros_agent = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(bringup_share, 'launch', 'microros_agent.launch.py')),
+        launch_arguments={
+            'serial_port': LaunchConfiguration('serial_port'),
+            'agent': LaunchConfiguration('agent'),
+        }.items(),
+        condition=IfCondition(LaunchConfiguration('use_microros')),
+    )
+
     arm_commander = Node(
         package='octavius_bringup',
         executable='arm_commander',
@@ -69,6 +83,16 @@ def generate_launch_description():
                               description='Abrir RViz'),
         DeclareLaunchArgument('headless', default_value='false',
                               description='Gazebo sin interfaz gráfica'),
+        DeclareLaunchArgument(
+            'use_microros', default_value='false',
+            description='Lanzar el agente micro-ROS para el joystick de la ESP32'),
+        DeclareLaunchArgument(
+            'serial_port', default_value='/dev/ttyUSB0',
+            description='Puerto serial de la ESP32'),
+        DeclareLaunchArgument(
+            'agent', default_value='native',
+            description='Agente micro-ROS: native (compilado) o docker'),
         simulation,
         arm_commander,
+        microros_agent,
     ])

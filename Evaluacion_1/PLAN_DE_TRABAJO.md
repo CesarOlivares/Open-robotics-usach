@@ -198,10 +198,12 @@ Joystick y teclado comandan articulaciones distintas, pero `arm_controller` nece
 
 **a) En la ESP32 (firmware)** — lee y normaliza; no toma decisiones:
 
-1. Lee el ADC de 12 bits de cada eje: `raw ∈ [0, 4095]`, centro ≈ 2048.
-2. Normaliza a `[-1, 1]`: `v = (raw − centro) / 2048`.
-3. Aplica zona muerta (el joystick en reposo nunca da exactamente el centro): si `|v| < 0,1` → `v = 0`.
+1. Al encender, mide el centro real de cada eje (promedio de 64 lecturas con el joystick suelto).
+2. Lee el ADC de 12 bits de cada eje (`raw ∈ [0, 4095]`, promedio de 8 muestras).
+3. Normaliza a `[-1, 1]` escalando cada lado por separado respecto al centro medido (detalle en `docs/circuito_joystick.md`).
 4. Publica `sensor_msgs/Joy` con `axes = [v_x, v_y]` a 20 Hz.
+
+La zona muerta se aplica en `arm_commander` (ROS), no en el firmware: así se ajusta en `teleop.yaml` sin reprogramar la placa.
 
 Se usa `sensor_msgs/Joy` porque es el mensaje estándar de ROS para mandos, con ejes ya normalizados en `[-1, 1]`.
 

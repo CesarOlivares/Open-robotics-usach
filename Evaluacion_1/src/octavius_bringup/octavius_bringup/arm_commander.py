@@ -40,6 +40,7 @@ Salidas:
 Las fórmulas están en arm_logic.py. Los parámetros, en config/teleop.yaml.
 """
 
+import signal
 from typing import Dict, List, Optional
 
 from octavius_bringup.arm_logic import (apply_deadzone, apply_step,
@@ -228,19 +229,35 @@ class ArmCommander(Node):
 
 def main(args=None) -> None:
     """Punto de entrada: ros2 run octavius_bringup arm_commander."""
-    # Sin el manejador de señales de rclpy, Ctrl+C (o el SIGINT que envía el
-    # launch al cerrar) llega como KeyboardInterrupt de Python y el nodo se
-    # cierra en orden. Con el manejador por defecto, rclpy invalida el
-    # contexto mientras el executor espera y el cierre puede terminar en error.
+    # Cierre ordenado con Ctrl+C (o con el SIGINT que envía el launch).
+    #
+    # El manejador de señales NO lanza una excepción: solo levanta una
+    # bandera que el lazo revisa cada 0.1 s. Una excepción podría aparecer
+    # en cualquier punto, incluso dentro de un callback que rclpy está
+    # ejecutando, y romper el cierre. Con la bandera el nodo siempre termina
+    # en el mismo lugar, aunque SIGINT llegue dos veces (desde la terminal y
+    # reenviado por el launch).
+    #
+    # Se desactiva el manejador de rclpy (que invalidaría el contexto en
+    # medio de la espera) y se instala este explícitamente, porque un
+    # proceso lanzado en segundo plano puede heredar SIGINT como "ignorada".
+    stop_requested = False
+
+    def on_sigint(signum, frame) -> None:
+        nonlocal stop_requested
+        stop_requested = True
+
+    signal.signal(signal.SIGINT, on_sigint)
     rclpy.init(args=args, signal_handler_options=SignalHandlerOptions.NO)
     node = ArmCommander()
-    try:
-        rclpy.spin(node)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        node.destroy_node()
-        rclpy.try_shutdown()
+    # spin_once con timeout en vez de spin(): la espera vuelve a Python cada
+    # 0.1 s para revisar la bandera. Con spin(), si Gazebo ya se cerró,
+    # /clock se detiene, el timer (tiempo simulado) no vuelve a dispararse y
+    # el nodo quedaría bloqueado.
+    while rclpy.ok() and not stop_requested:
+        rclpy.spin_once(node, timeout_sec=0.1)
+    node.destroy_node()
+    rclpy.try_shutdown()
 
 
 if __name__ == '__main__':
