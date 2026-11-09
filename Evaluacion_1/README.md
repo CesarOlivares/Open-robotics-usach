@@ -172,7 +172,7 @@ ros2 topic hz /octavius/imu            # IMU, ~100 Hz
 Evaluacion_1/
 ├── README.md
 ├── PLAN_DE_TRABAJO.md
-├── docs/circuito_joystick.md      circuito, procesamiento de la señal y carga del firmware
+├── docs/                          circuito del joystick y protocolo de pruebas con hardware
 ├── firmware/octavius_joystick/    firmware de la ESP32 (micro_ros_arduino)
 └── src/
     ├── octavius_description/      modelo URDF/XACRO + RViz
@@ -195,7 +195,7 @@ Evaluacion_1/
 | 1 — Modelo URDF/XACRO + RViz | ✅ |
 | 2 — Gazebo + ros2_control | ✅ |
 | 3 — Teclado + `arm_commander` | ✅ |
-| 4 — micro-ROS + joystick | 🟡 firmware compilado sin advertencias y agente probado; falta la prueba con la ESP32 conectada |
+| 4 — micro-ROS + joystick | 🟡 código completo: firmware compilado sin advertencias y agente probado. Pruebas con la ESP32 pendientes: [`docs/pruebas_hardware.md`](docs/pruebas_hardware.md) |
 | 5 — Launch integrado | ✅ `bringup.launch.py` (con `use_microros:=true` suma el agente) |
 | 6 — Sensores básicos (cámara + IMU) | ✅ adelantada: publican y se ven en RViz |
 | 7–8 — Calidad, documentación y entrega | ⏳ |

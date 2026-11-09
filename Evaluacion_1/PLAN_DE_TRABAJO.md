@@ -279,6 +279,8 @@ Orden: **núcleo (fases 0–5) → sensores básicos (6) → calidad y entrega (
 - `microros_agent.launch.py`: `micro_ros_agent serial --dev /dev/ttyUSB0 -b 115200` (puerto configurable).
 - ✅ *Hecho cuando:* el joystick gira la base (X) y mueve el hombro (Y) en Gazebo y RViz.
 
+> **Estado (09-11-2026):** código de la Fase 4 terminado y verificado sin hardware. Las pruebas con la ESP32 se hacen después, en una fase de pruebas propia, siguiendo `docs/pruebas_hardware.md` (pruebas H1–H15).
+
 ### Fase 5 — Launch integrado (R10) (≈ 0,5 día)
 - `bringup.launch.py` con argumentos documentados (`--show-args`): `use_rviz`, `use_microros`, `serial_port`, `world`, `headless`.
 - ✅ *Hecho cuando:* un comando levanta Gazebo + controladores + RViz + teclado (+ agente). **Aquí el núcleo queda terminado.**
@@ -349,6 +351,7 @@ Membrete · logo universidad/departamento · título · nombre estudiante · nom
 | Teclado | ✅ `a` garra, `q/e` giro de garra, y además codo y muñeca pitch (§5.4c) |
 | Control | ✅ Interfaz de posición, sin PID propio; `JointGroupPositionController` |
 | Motor de física | ✅ Bullet Featherstone: DART (el predeterminado) no soporta la junta `mimic` de la garra en Gazebo Harmonic — verificado en Fase 2 |
+| Pruebas con hardware | ⏸️ Postergadas a una fase de pruebas (`docs/pruebas_hardware.md`) |
 | Prioridad | ✅ Núcleo primero (modelo, controladores, integración); sensores básicos después |
 | Sensores (requisito) | ✅ Cámara RGB + IMU, versión básica (§6) |
 | Sensores avanzados | ⏸️ Postergados como extensión opcional (§12) |
