@@ -295,6 +295,8 @@ Orden: **núcleo (fases 0–5) → sensores básicos (6) → calidad y entrega (
 - Prueba en limpio: descomprimir el zip en otra carpeta (idealmente en un contenedor `ros:jazzy`) y seguir **solo** el README.
 - ✅ *Hecho cuando:* la prueba en limpio funciona sin intervención.
 
+> **Estado (09-11-2026):** ✅ terminada. Prueba en limpio en `ros:jazzy` aprobada; detectó y corrigió 2 dependencias no declaradas (`joint_state_publisher`, `ros2controlcli`). 27 tests automáticos, incluido uno de consistencia entre URDF y archivos de configuración.
+
 ### Fase 8 — Documentación y entregables (R12–R14) (≈ 1,5 días)
 - `DOCUMENTACION.md` → `tutorial.docx` + `tutorial.pdf` (pandoc).
 - Presentación de ~12–15 diapositivas con el formato exigido.

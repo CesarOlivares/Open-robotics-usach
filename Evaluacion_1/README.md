@@ -171,6 +171,16 @@ colcon test-result --verbose
 | `copyright` | Licencia en cada archivo fuente |
 | `xmllint`, `lint_cmake` | Sintaxis de `package.xml` y `CMakeLists.txt` |
 
+### 5.2 Prueba de integración y prueba en limpio
+
+```bash
+# Con la simulación corriendo (bringup.launch.py), en otra terminal:
+python3 scripts/integration_test.py
+
+# Instalación completa en un Ubuntu + ROS 2 limpio (requiere Docker, ~10 min):
+./scripts/clean_room_test.sh
+```
+
 ## 6. Problemas frecuentes
 
 | Síntoma | Causa / solución |
@@ -191,6 +201,7 @@ Evaluacion_1/
 ├── PLAN_DE_TRABAJO.md
 ├── docs/                          circuito del joystick y protocolo de pruebas con hardware
 ├── firmware/octavius_joystick/    firmware de la ESP32 (micro_ros_arduino)
+├── scripts/                       zip de entrega y pruebas de integración / en limpio
 └── src/
     ├── octavius_description/      modelo URDF/XACRO + RViz
     │   ├── urdf/                  octavius.urdf.xacro (principal) y sus partes
@@ -215,4 +226,5 @@ Evaluacion_1/
 | 4 — micro-ROS + joystick | 🟡 código completo: firmware compilado sin advertencias y agente probado. Pruebas con la ESP32 pendientes: [`docs/pruebas_hardware.md`](docs/pruebas_hardware.md) |
 | 5 — Launch integrado | ✅ `bringup.launch.py` (con `use_microros:=true` suma el agente) |
 | 6 — Sensores básicos (cámara + IMU) | ✅ adelantada: publican y se ven en RViz |
-| 7–8 — Calidad, documentación y entrega | ⏳ |
+| 7 — Calidad y prueba en limpio | ✅ probado en un contenedor `ros:jazzy` limpio siguiendo solo este README ([evidencia](docs/evidencia/prueba_en_limpio_2026-11-09.log)) |
+| 8 — Documentación y entrega | ⏳ |
