@@ -156,10 +156,27 @@ ros2 topic hz /octavius/camera/image   # cámara, ~15 Hz
 ros2 topic hz /octavius/imu            # IMU, ~100 Hz
 ```
 
+### 5.1 Pruebas automáticas
+
+```bash
+colcon test
+colcon test-result --verbose
+```
+
+| Prueba | Qué verifica |
+|---|---|
+| `test_arm_logic.py` | Fórmulas de `arm_commander`: límites, zona muerta, integración del joystick, paso por tecla, retorno a home y mapa de teclas |
+| `test_config_consistency.py` | Que URDF, `controllers.yaml`, `teleop.yaml` y `gz_bridge.yaml` usen los mismos nombres de articulaciones y tópicos |
+| `flake8`, `pep257` | Estilo de código y docstrings de Python (estándar de ROS 2) |
+| `copyright` | Licencia en cada archivo fuente |
+| `xmllint`, `lint_cmake` | Sintaxis de `package.xml` y `CMakeLists.txt` |
+
 ## 6. Problemas frecuentes
 
 | Síntoma | Causa / solución |
 |---|---|
+| `ros2 topic hz /octavius/camera/image` da menos de 15 Hz | El PC no tiene GPU (o Gazebo usa renderizado por software): la cámara se procesa más lento. No afecta al control del brazo |
+| `ros2 topic echo` dice `does not appear to be published yet` justo después de lanzar | El *daemon* de la CLI de ROS 2 aún no descubre el tópico. Esperar unos segundos y repetir |
 | `No se encontró el paquete micro_ros_agent` | Falta `source ~/microros_ws/install/local_setup.bash`, o usar `agent:=docker` |
 | El agente no abre el puerto (`Permission denied`) | El usuario no está en el grupo `dialout`: `sudo usermod -aG dialout $USER` y volver a iniciar sesión |
 | El LED sigue parpadeando | Puerto equivocado (`serial_port:=...`), o el Monitor Serie del Arduino IDE sigue abierto |

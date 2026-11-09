@@ -21,6 +21,8 @@
   <exec_depend>controller_manager</exec_depend>
   <exec_depend>joint_state_broadcaster</exec_depend>
   <exec_depend>position_controllers</exec_depend>
+  <!-- Comando "ros2 control ..." (list_controllers, etc.) usado en el README -->
+  <exec_depend>ros2controlcli</exec_depend>
 
   <!-- Nodos propios (arm_commander, keyboard_teleop) -->
   <exec_depend>rclpy</exec_depend>
