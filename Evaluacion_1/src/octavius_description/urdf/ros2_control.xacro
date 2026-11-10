@@ -15,11 +15,8 @@
   Con interfaz de posición, el propio plugin cierra el lazo y lleva la junta
   al ángulo pedido; por eso no se configura un PID en los controladores.
 
-  El dedo derecho (gripper_mimic_joint) es una junta <mimic> del URDF.
-  En ros2_control (Jazzy) igual debe declararse aquí, pero SOLO con
-  interfaces de estado: no recibe comandos propios, y el hardware de
-  Gazebo la mueve copiando a gripper_joint según la regla <mimic>.
-  Si no se declara, RViz la dibuja bien pero en Gazebo el dedo no se mueve.
+  La garra son dos juntas (un dedo cada una) con interfaz de comando
+  propia; gripper_controller les manda siempre el mismo valor.
 
   Argumento:
     controllers_file  ruta absoluta del YAML con los controladores. La
@@ -48,11 +45,8 @@
       <xacro:position_joint name="elbow_joint"/>
       <xacro:position_joint name="wrist_pitch_joint"/>
       <xacro:position_joint name="wrist_roll_joint"/>
-      <xacro:position_joint name="gripper_joint"/>
-      <joint name="gripper_mimic_joint">
-        <state_interface name="position"/>
-        <state_interface name="velocity"/>
-      </joint>
+      <xacro:position_joint name="gripper_left_joint"/>
+      <xacro:position_joint name="gripper_right_joint"/>
     </ros2_control>
 
     <!--

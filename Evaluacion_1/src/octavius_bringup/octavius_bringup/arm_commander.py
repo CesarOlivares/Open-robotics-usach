@@ -35,7 +35,8 @@ Entradas:
 
 Salidas:
     /arm_controller/commands     (std_msgs/Float64MultiArray) 5 ángulos [rad]
-    /gripper_controller/commands (std_msgs/Float64MultiArray) apertura [m]
+    /gripper_controller/commands (std_msgs/Float64MultiArray) apertura de
+                                 cada dedo [m], el mismo valor para ambos
 
 Las fórmulas están en arm_logic.py. Los parámetros, en config/teleop.yaml.
 """
@@ -45,7 +46,7 @@ from typing import Dict, List, Optional
 
 from octavius_bringup.arm_logic import (apply_deadzone, apply_step,
                                         integrate_velocity, parse_joint_limits,
-                                        step_toward)
+                                        soft_limits, step_toward)
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile
@@ -83,8 +84,10 @@ class ArmCommander(Node):
             'keyboard_step', 0.05).value
         self.home_velocity: float = self.declare_parameter(
             'home_velocity', 0.5).value
-        self.gripper_joint: str = self.declare_parameter(
-            'gripper_joint', 'gripper_joint').value
+        self.limit_margin: float = self.declare_parameter(
+            'limit_margin', 0.02).value
+        self.gripper_joints: List[str] = self.declare_parameter(
+            'gripper_joints', ['gripper_left_joint', 'gripper_right_joint']).value
         self.gripper_open: float = self.declare_parameter(
             'gripper_open', 0.02).value
         self.gripper_closed: float = self.declare_parameter(
@@ -124,11 +127,14 @@ class ArmCommander(Node):
     # Inicialización
     # ------------------------------------------------------------------
     def on_robot_description(self, msg: String) -> None:
-        """Lee los límites articulares del URDF."""
-        self.limits = parse_joint_limits(msg.data)
-        missing = [j for j in self.arm_joints if j not in self.limits]
+        """Lee los límites del URDF y les aplica el margen (límites blandos)."""
+        urdf_limits = parse_joint_limits(msg.data)
+        missing = [j for j in self.arm_joints if j not in urdf_limits]
         if missing:
             self.get_logger().error(f'El URDF no define límites para: {missing}')
+            return
+        self.limits = {j: soft_limits(urdf_limits[j], self.limit_margin)
+                       for j in self.arm_joints}
 
     def on_joint_states(self, msg: JointState) -> None:
         """
@@ -144,7 +150,7 @@ class ArmCommander(Node):
             return
         self.target = {j: measured[j] for j in self.arm_joints}
         self.gripper_is_open = (
-            measured.get(self.gripper_joint, 0.0) > self.gripper_open / 2)
+            measured.get(self.gripper_joints[0], 0.0) > self.gripper_open / 2)
         self.get_logger().info('arm_commander listo: objetivo inicial = '
                                'posición actual del brazo.')
 
@@ -222,7 +228,9 @@ class ArmCommander(Node):
     def publish_gripper(self) -> None:
         """Publica la apertura de la garra según su estado actual."""
         value = self.gripper_open if self.gripper_is_open else self.gripper_closed
-        self.gripper_pub.publish(Float64MultiArray(data=[value]))
+        # Misma apertura para cada dedo: la garra es un solo GDL.
+        self.gripper_pub.publish(
+            Float64MultiArray(data=[value] * len(self.gripper_joints)))
         self.get_logger().info(
             f'Garra {"abierta" if self.gripper_is_open else "cerrada"}')
 

@@ -52,6 +52,24 @@ def parse_joint_limits(urdf_xml: str) -> Dict[str, Limits]:
     return limits
 
 
+def soft_limits(limits: Limits, margin: float) -> Limits:
+    """
+    Achica un intervalo de límites en un margen por cada lado.
+
+        [q_min, q_max]  →  [q_min + margen, q_max - margen]
+
+    Los límites del URDF son los topes físicos. Comandar exactamente un tope
+    no es buena práctica (en un robot real el motor empuja contra el tope
+    mecánico) y, en Gazebo con DART, una junta revoluta comandada justo en su
+    límite queda trabada e ignora los comandos siguientes. Por eso el nodo
+    trabaja con estos "límites blandos", un poco más adentro.
+    """
+    lower, upper = limits
+    if 2 * margin >= upper - lower:
+        raise ValueError(f'margen {margin} demasiado grande para el rango {limits}')
+    return (lower + margin, upper - margin)
+
+
 def clamp(value: float, limits: Limits) -> float:
     """Satura value dentro del intervalo [mínimo, máximo]."""
     lower, upper = limits

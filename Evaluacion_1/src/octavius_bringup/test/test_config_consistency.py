@@ -68,10 +68,10 @@ def ros2_control_command_joints(urdf_root):
             if j.find('command_interface') is not None}
 
 
-def test_robot_has_six_movable_joints(limits):
-    # 5 del brazo + garra (el dedo mimic también es móvil, pero no se cuenta)
-    movable = {j for j in limits if j != 'gripper_mimic_joint'}
-    assert len(movable) == 6
+def test_robot_has_six_degrees_of_freedom(limits, teleop):
+    # 5 articulaciones del brazo + la garra (2 juntas, un solo GDL)
+    assert len(limits) == len(teleop['arm_joints']) + len(teleop['gripper_joints'])
+    assert len(teleop['arm_joints']) + 1 == 6
 
 
 def test_controller_joints_exist_and_are_commandable(urdf_root, limits,
@@ -97,10 +97,22 @@ def test_teleop_input_joints_are_arm_joints(teleop):
     assert len(teleop['joystick_axis_sign']) == len(teleop['joystick_joints'])
 
 
+def test_limit_margin_fits_every_arm_joint(limits, teleop):
+    for joint in teleop['arm_joints']:
+        lower, upper = limits[joint]
+        assert 2 * teleop['limit_margin'] < upper - lower
+
+
+def test_gripper_joints_match_controller(controllers, teleop):
+    assert teleop['gripper_joints'] == \
+        controllers['gripper_controller']['ros__parameters']['joints']
+
+
 def test_gripper_values_within_limits(limits, teleop):
-    lower, upper = limits[teleop['gripper_joint']]
-    assert lower <= teleop['gripper_closed'] <= upper
-    assert lower <= teleop['gripper_open'] <= upper
+    for joint in teleop['gripper_joints']:
+        lower, upper = limits[joint]
+        assert lower <= teleop['gripper_closed'] <= upper
+        assert lower <= teleop['gripper_open'] <= upper
 
 
 def test_bridge_covers_every_sensor_topic(urdf_root):

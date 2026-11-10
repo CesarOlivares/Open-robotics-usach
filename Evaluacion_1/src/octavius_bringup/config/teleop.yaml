@@ -34,11 +34,18 @@ arm_commander:
     # Ángulo que avanza la articulación por cada pulsación [rad] (≈ 2,9°)
     keyboard_step: 0.05
 
+    # ----- Límites blandos -----
+    # Margen [rad] que se deja dentro de cada límite del URDF (≈ 1,1°).
+    # Nunca se comanda el tope físico: en Gazebo (DART) una junta revoluta
+    # comandada justo en su límite queda trabada.
+    limit_margin: 0.02
+
     # ----- Pose home (tecla h) -----
     # Velocidad con que todas las articulaciones vuelven a 0 [rad/s]
     home_velocity: 0.5
 
     # ----- Garra (tecla a) -----
-    gripper_joint: gripper_joint
+    # Juntas de los dos dedos: reciben siempre el mismo valor
+    gripper_joints: [gripper_left_joint, gripper_right_joint]
     gripper_open: 0.02    # apertura de cada dedo [m]
     gripper_closed: 0.0

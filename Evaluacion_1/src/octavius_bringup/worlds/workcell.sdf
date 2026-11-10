@@ -26,15 +26,11 @@
         Imu              calcula las lecturas de los sensores IMU
     -->
     <!--
-      Motor de física: Bullet Featherstone en vez de DART (el predeterminado).
-      Motivo: la garra usa una junta <mimic> (el dedo derecho copia al
-      izquierdo) y DART no implementa restricciones mimic en Gazebo Harmonic.
+      Motor de física: DART, el predeterminado de Gazebo Harmonic (no se
+      declara <engine>). Se probó Bullet Featherstone, pero no entrega la
+      velocidad de los links y la IMU medía velocidad angular 0.
     -->
-    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics">
-      <engine>
-        <filename>gz-physics-bullet-featherstone-plugin</filename>
-      </engine>
-    </plugin>
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
     <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
     <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
     <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">

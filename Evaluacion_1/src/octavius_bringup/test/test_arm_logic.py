@@ -16,7 +16,7 @@
 
 from octavius_bringup.arm_logic import (apply_deadzone, apply_step, clamp,
                                         integrate_velocity, parse_joint_limits,
-                                        step_toward)
+                                        soft_limits, step_toward)
 import pytest
 
 URDF = """
@@ -38,6 +38,15 @@ URDF = """
 def test_parse_joint_limits_reads_only_movable_joints():
     limits = parse_joint_limits(URDF)
     assert limits == {'rev_j': (-1.5, 2.0), 'pri_j': (0.0, 0.025)}
+
+
+def test_soft_limits_shrink_both_sides():
+    assert soft_limits((-1.0, 2.0), 0.02) == pytest.approx((-0.98, 1.98))
+
+
+def test_soft_limits_reject_margin_larger_than_range():
+    with pytest.raises(ValueError):
+        soft_limits((0.0, 0.03), 0.02)
 
 
 def test_clamp():

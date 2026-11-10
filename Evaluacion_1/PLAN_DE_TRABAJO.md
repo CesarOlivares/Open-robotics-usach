@@ -76,7 +76,7 @@
 | 3 | `elbow_joint` | revolute | Y | Codo | Teclado |
 | 4 | `wrist_pitch_joint` | revolute | Y | Inclina la muñeca | Teclado |
 | 5 | `wrist_roll_joint` | revolute | Z | Gira la garra sobre su eje | Teclado |
-| 6 | `gripper_joint` | prismatic | Y | Abre/cierra la garra (2° dedo con `mimic`) | Teclado |
+| 6 | `gripper_left_joint` + `gripper_right_joint` | prismatic ×2 | ±Y | Abre/cierra la garra (2 dedos, mismo comando: 1 GDL) | Teclado |
 
 ```
 world
@@ -89,8 +89,8 @@ world
                     └── wrist_roll_joint ──► gripper_base_link
                         ├── camera_link (fixed)         ← SENSOR 1: cámara RGB
                         │   └── camera_optical_link (fixed, convención REP-103)
-                        ├── gripper_joint ──► finger_left_link
-                        └── gripper_mimic_joint ──► finger_right_link (mimic)
+                        ├── gripper_left_joint ──► finger_left_link
+                        └── gripper_right_joint ──► finger_right_link
 ```
 
 - Dimensiones, masas y límites en **un solo archivo** de parámetros xacro.
@@ -352,7 +352,8 @@ Membrete · logo universidad/departamento · título · nombre estudiante · nom
 | Joystick (ESP32, serial) | ✅ X → base, Y → hombro |
 | Teclado | ✅ `a` garra, `q/e` giro de garra, y además codo y muñeca pitch (§5.4c) |
 | Control | ✅ Interfaz de posición, sin PID propio; `JointGroupPositionController` |
-| Motor de física | ✅ Bullet Featherstone: DART (el predeterminado) no soporta la junta `mimic` de la garra en Gazebo Harmonic — verificado en Fase 2 |
+| Motor de física | ✅ DART (predeterminado). Se probó Bullet Featherstone para usar una junta `mimic` en la garra, pero no entrega la velocidad de los links y la IMU medía ω = 0. La garra usa 2 juntas comandadas con el mismo valor (1 GDL) — verificado 10-11-2026 |
+| Límites blandos | ✅ `arm_commander` deja 0,02 rad de margen dentro de cada límite: con DART una junta revoluta comandada justo en su límite queda trabada — verificado 10-11-2026 |
 | Pruebas con hardware | ⏸️ Postergadas a una fase de pruebas (`docs/pruebas_hardware.md`) |
 | Prioridad | ✅ Núcleo primero (modelo, controladores, integración); sensores básicos después |
 | Sensores (requisito) | ✅ Cámara RGB + IMU, versión básica (§6) |

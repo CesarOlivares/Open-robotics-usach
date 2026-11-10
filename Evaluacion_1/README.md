@@ -89,7 +89,7 @@ ros2 run octavius_bringup keyboard_teleop
 | `a` | Abrir / cerrar garra |
 | `h` | Volver a home (todas las articulaciones a 0) |
 
-Cada pulsación mueve 0,05 rad (≈ 2,9°). Mantener la tecla presionada repite el paso. La base y el hombro se controlan con el joystick de la ESP32 (Fase 4).
+Cada pulsación mueve 0,05 rad (≈ 2,9°). Mantener la tecla presionada repite el paso. Ninguna articulación pasa de su límite del URDF menos un margen de 0,02 rad (*límites blandos*, ver `limit_margin` en `config/teleop.yaml`). La base y el hombro se controlan con el joystick de la ESP32 (Fase 4).
 
 Sin la ESP32, el joystick se puede simular publicando a mano (eje X → base, eje Y → hombro, valores entre -1 y 1):
 
@@ -105,8 +105,8 @@ Con `gazebo.launch.py` corriendo, en otra terminal:
 # Brazo: 5 ángulos [rad] en orden base, hombro, codo, muñeca pitch, muñeca roll
 ros2 topic pub --once /arm_controller/commands std_msgs/msg/Float64MultiArray "{data: [0.6, 0.7, 0.8, 0.5, 0.0]}"
 
-# Garra: apertura de cada dedo [m], de 0.0 (cerrada) a 0.025 (abierta)
-ros2 topic pub --once /gripper_controller/commands std_msgs/msg/Float64MultiArray "{data: [0.02]}"
+# Garra: apertura de cada dedo [m], de 0.0 (cerrada) a 0.025 (abierta); un valor por dedo, siempre iguales
+ros2 topic pub --once /gripper_controller/commands std_msgs/msg/Float64MultiArray "{data: [0.02, 0.02]}"
 ```
 
 ### 4.5 Joystick con la ESP32 (micro-ROS)
@@ -165,7 +165,7 @@ colcon test-result --verbose
 
 | Prueba | Qué verifica |
 |---|---|
-| `test_arm_logic.py` | Fórmulas de `arm_commander`: límites, zona muerta, integración del joystick, paso por tecla, retorno a home y mapa de teclas |
+| `test_arm_logic.py` | Fórmulas de `arm_commander`: límites y límites blandos, zona muerta, integración del joystick, paso por tecla, retorno a home y mapa de teclas |
 | `test_config_consistency.py` | Que URDF, `controllers.yaml`, `teleop.yaml` y `gz_bridge.yaml` usen los mismos nombres de articulaciones y tópicos |
 | `flake8`, `pep257` | Estilo de código y docstrings de Python (estándar de ROS 2) |
 | `copyright` | Licencia en cada archivo fuente |

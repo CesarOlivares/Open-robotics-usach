@@ -17,7 +17,7 @@ import rclpy
 from sensor_msgs.msg import JointState, Joy
 
 JOINTS = ['base_joint', 'shoulder_joint', 'elbow_joint', 'wrist_pitch_joint',
-          'wrist_roll_joint', 'gripper_joint']
+          'wrist_roll_joint', 'gripper_left_joint']
 
 rclpy.init()
 node = rclpy.create_node('fase3_test')
@@ -77,10 +77,14 @@ show('4) Joystick 0.05 (bajo zona muerta 0.1) → sin cambios')
 
 key((1.0, 0.0, 0.0), times=100)
 spin(3.0)
-show('5) Codo con 100 pulsaciones → saturado en el límite 2.356')
+show('5) Codo con 100 pulsaciones → saturado en 2.336 (límite 2.356 − margen 0.02)')
 
 key((0.0, 0.0, 0.0), buttons=(0, 1))
-spin(7.0)
+# El retorno es a velocidad acotada (home_velocity) y en tiempo simulado:
+# se espera a que llegue, con un máximo de 30 s reales.
+end = time.time() + 30.0
+while time.time() < end and any(abs(state.get(j, 1.0)) > 1e-3 for j in JOINTS[:5]):
+    spin(0.2)
 show('6) Home (h) → todo vuelve a 0 (la garra no cambia)')
 
 node.destroy_node()

@@ -3,13 +3,19 @@
   Muñeca roll (articulación 5) y garra de dos dedos (articulación 6).
 
     wrist_link ─(5) wrist_roll_joint─► gripper_base_link   gira la garra sobre su propio eje (Z)
-    gripper_base_link ─(6) gripper_joint──────► finger_left_link    dedo controlado (prismático, eje +Y)
-    gripper_base_link ─ gripper_mimic_joint ──► finger_right_link   dedo espejo (prismático, eje -Y)
+    gripper_base_link ─(6) gripper_left_joint ─► finger_left_link    prismático, eje +Y
+    gripper_base_link ─(6) gripper_right_joint ► finger_right_link   prismático, eje -Y
 
-  Abrir/cerrar la garra es UNA sola articulación: gripper_joint.
-  El dedo derecho usa <mimic>: su posición siempre es
-      q_derecho = multiplier · q_izquierdo + offset = 1 · q_izquierdo
-  y como su eje apunta a -Y, se mueve en espejo. No se controla por separado.
+  Abrir/cerrar la garra es UN solo grado de libertad (articulación 6),
+  formado por dos juntas prismáticas que SIEMPRE reciben el mismo valor:
+  gripper_controller manda la misma apertura a ambos dedos. Como el eje del
+  dedo derecho apunta a -Y, los dedos se mueven en espejo. Equivale a una
+  garra real cuyos dos dedos están acoplados por un mismo mecanismo.
+
+  Por qué no se usa <mimic> (un dedo que copia al otro):
+  el motor de física predeterminado de Gazebo Harmonic (DART) no implementa
+  restricciones mimic. Bullet Featherstone sí, pero no entrega la velocidad
+  de los links y la IMU mediría velocidad angular 0. Se priorizó la IMU.
 
   q = 0      → garra cerrada
   q = 0.025  → garra abierta (cada dedo se separa 2,5 cm)
@@ -61,8 +67,8 @@
       </xacro:box_inertial>
     </link>
 
-    <!-- ===== (6) Garra: dedo izquierdo (el que se controla) ===== -->
-    <joint name="gripper_joint" type="prismatic">
+    <!-- ===== (6) Garra: dedo izquierdo ===== -->
+    <joint name="gripper_left_joint" type="prismatic">
       <parent link="gripper_base_link"/>
       <child link="finger_left_link"/>
       <origin xyz="0 ${finger_closed_offset + finger_y/2} ${gripper_base_z}" rpy="0 0 0"/>
@@ -73,8 +79,8 @@
     </joint>
     <xacro:finger_link name="finger_left_link"/>
 
-    <!-- Dedo derecho: copia al izquierdo con <mimic>, en sentido contrario -->
-    <joint name="gripper_mimic_joint" type="prismatic">
+    <!-- ===== (6) Garra: dedo derecho (mismo valor, eje opuesto) ===== -->
+    <joint name="gripper_right_joint" type="prismatic">
       <parent link="gripper_base_link"/>
       <child link="finger_right_link"/>
       <origin xyz="0 ${-(finger_closed_offset + finger_y/2)} ${gripper_base_z}" rpy="0 0 0"/>
@@ -82,7 +88,6 @@
       <limit lower="${gripper_lower}" upper="${gripper_upper}"
              velocity="${gripper_velocity}" effort="${gripper_effort}"/>
       <dynamics damping="1.0" friction="0.1"/>
-      <mimic joint="gripper_joint" multiplier="1" offset="0"/>
     </joint>
     <xacro:finger_link name="finger_right_link"/>
 
