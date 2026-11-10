@@ -2,9 +2,9 @@
 
 Proyecto de la asignatura **Open Robotics** (2° semestre 2026) — Cesar Olivares Lavalovich.
 
-Octavius es un brazo de **6 articulaciones** (base, hombro, codo, muñeca pitch, muñeca roll y garra) modelado en URDF/XACRO, visualizado en RViz y simulado en Gazebo Harmonic con `ros2_control`. Lleva una cámara en la garra y una IMU en la muñeca.
+Octavius es un brazo de **6 articulaciones** (base, hombro, codo, muñeca pitch, muñeca roll y garra de dos dedos) modelado en URDF/XACRO, visualizado en RViz y simulado en Gazebo Harmonic con `ros2_control`. Lleva una cámara en la garra y una IMU en la muñeca.
 
-> Guía rápida para instalar y ejecutar. La explicación detallada de cada componente estará en `DOCUMENTACION.md`, y el plan de trabajo en [`PLAN_DE_TRABAJO.md`](PLAN_DE_TRABAJO.md).
+> Guía rápida para instalar y ejecutar. La explicación detallada de cada componente (qué es, por qué se usa, qué datos maneja y cómo los procesa), con ecuaciones, mediciones y decisiones de diseño, está en [`DOCUMENTACION.md`](DOCUMENTACION.md). El plan de trabajo está en [`PLAN_DE_TRABAJO.md`](PLAN_DE_TRABAJO.md).
 
 ---
 
@@ -198,6 +198,7 @@ python3 scripts/integration_test.py
 ```
 Evaluacion_1/
 ├── README.md
+├── DOCUMENTACION.md               documentación técnica y tutorial completo
 ├── PLAN_DE_TRABAJO.md
 ├── docs/                          circuito del joystick y protocolo de pruebas con hardware
 ├── firmware/octavius_joystick/    firmware de la ESP32 (micro_ros_arduino)
@@ -227,4 +228,4 @@ Evaluacion_1/
 | 5 — Launch integrado | ✅ `bringup.launch.py` (con `use_microros:=true` suma el agente) |
 | 6 — Sensores básicos (cámara + IMU) | ✅ adelantada: publican y se ven en RViz |
 | 7 — Calidad y prueba en limpio | ✅ probado en un contenedor `ros:jazzy` limpio siguiendo solo este README ([evidencia](docs/evidencia/prueba_en_limpio_2026-11-09.log)) |
-| 8 — Documentación y entrega | ⏳ |
+| 8 — Documentación y entrega | 🟡 [`DOCUMENTACION.md`](DOCUMENTACION.md) completo; presentación aparte |

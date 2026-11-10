@@ -298,6 +298,8 @@ Orden: **núcleo (fases 0–5) → sensores básicos (6) → calidad y entrega (
 > **Estado (09-11-2026):** ✅ terminada. Prueba en limpio en `ros:jazzy` aprobada; detectó y corrigió 2 dependencias no declaradas (`joint_state_publisher`, `ros2controlcli`). 27 tests automáticos, incluido uno de consistencia entre URDF y archivos de configuración.
 
 ### Fase 8 — Documentación y entregables (R12–R14) (≈ 1,5 días)
+
+> **Estado (10-11-2026):** `DOCUMENTACION.md` completo (8 figuras con datos reales, 29 tablas y 14 ecuaciones numeradas). La presentación se hace aparte.
 - `DOCUMENTACION.md` → `tutorial.docx` + `tutorial.pdf` (pandoc).
 - Presentación de ~12–15 diapositivas con el formato exigido.
 - `make_release.sh` → `cesar_olivares_2026_2.zip`.
