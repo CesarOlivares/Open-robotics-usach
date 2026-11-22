@@ -84,7 +84,7 @@
     \draw[flecha] (ctrl) -- node[rotulo, above] {posición} (gz);
     \draw[flecha] (gz) -- node[rotulo, right] {sensores} (br);
     \draw[flecha] (gz) -- node[rotulo, right] {ángulo medido} (jsb);
-    \draw[flecha] (jsb) -- node[rotulo, above] {/joint\_states} (rsp);
+    \draw[flecha] (jsb) -- node[rotulo, below] {/joint\_states} (rsp);
     \draw[flecha] (rsp) -- node[rotulo, above] {/tf} (rviz);
     \draw[flecha, dashed] (10.9,-2.3) -- (10.9,-1.2) -- node[rotulo, below, pos=0.5] {estado inicial} (4.2,-1.2) -- (ac.south);
     % Etapas
@@ -95,7 +95,7 @@
     \node[num] at (jsb.north west) {5};
   \end{tikzpicture}}
   \vfill
-  {\scriptsize \textbf{1} Entrada (\texttt{sensor\_msgs/Joy}) \quad \textbf{2} Integración y límites \quad \textbf{3} Controladores \quad \textbf{4} Simulación física \quad \textbf{5} Medición y visualización}
+  {\scriptsize \textbf{1} Entrada (\texttt{Joy}) \quad \textbf{2} Integración y límites \quad \textbf{3} Controladores \quad \textbf{4} Simulación \quad \textbf{5} Medición y visualización}
 \end{frame}
 
 %--------------------------------------
@@ -406,8 +406,8 @@ def integrate_velocity(target, axis,
     {\small Joystick a tope ($v = 1$), $\omega_{max} = 0{,}5$ rad/s, $\Delta t = 0{,}02$ s $\Rightarrow$ \textbf{0,01 rad por ciclo}.}
     \column{0.45\textwidth}
     \begin{figure}
-      \includegraphics[width=\textwidth]{grafico_respuesta_articular.png}
-      \caption{Objetivo y posición medida: base con joystick (izq.) y codo con 8 pulsaciones (der.).}
+      \includegraphics[width=\textwidth]{grafico_base_joystick.png}
+      \caption{Ángulo objetivo y medido de la base con el joystick a tope: la medición sigue la rampa con un retraso de 0,05 rad.}
     \end{figure}
   \end{columns}
   \fuente{mediciones propias en simulación \cite{octaviusdoc}.}
@@ -501,7 +501,7 @@ float normalize_axis(int raw, int center) {
     \column{0.48\textwidth}
     \centering{\Huge\bfseries\color{tPrim} 31}\\{\scriptsize pruebas automáticas aprobadas (\texttt{colcon test})}
     \column{0.48\textwidth}
-    \centering{\Huge\bfseries\color{tPrim} 1 comando}\\{\scriptsize para instalar en un PC limpio: \texttt{rosdep install}}
+    \centering{\Huge\bfseries\color{tPrim} 3 comandos}\\{\scriptsize desde un PC limpio: \texttt{rosdep}, \texttt{colcon} y \texttt{ros2 launch}}
   \end{columns}
   \fuente{mediciones propias \cite{octaviusdoc}.}
 \end{frame}

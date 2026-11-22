@@ -1,5 +1,5 @@
 <!-- Membrete -->
-| [Logo Universidad / Departamento] | **[Universidad] — [Departamento]**<br>Open Robotics — 2° semestre 2026 |
+| <img src="presentacion/usach_logo.jpg" alt="Logo USACH" height="60"> | **Universidad de Santiago de Chile**<br>Open Robotics — 2° semestre 2026 |
 |:---:|:---|
 
 # Octavius: brazo manipulador de 6 articulaciones simulado con ROS 2, Gazebo y micro-ROS
@@ -9,7 +9,7 @@
 | | |
 |---|---|
 | **Estudiante** | Cesar Olivares Lavalovich |
-| **Profesor** | [Nombre del profesor] |
+| **Profesor** | Jose Pascal |
 | **Asignatura** | Open Robotics |
 | **Fecha** | 10 de noviembre de 2026 |
 | **Versión del software** | ROS 2 Jazzy Jalisco · Gazebo Harmonic · Ubuntu 24.04 LTS |
