@@ -9,7 +9,7 @@
 | | |
 |---|---|
 | **Estudiante** | Cesar Olivares Lavalovich |
-| **Profesor** | Jose Pascal |
+| **Profesor** | José Pascal |
 | **Asignatura** | Open Robotics |
 | **Fecha** | 10 de noviembre de 2026 |
 | **Versión del software** | ROS 2 Jazzy Jalisco · Gazebo Harmonic · Ubuntu 24.04 LTS |
