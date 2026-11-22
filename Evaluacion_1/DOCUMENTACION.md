@@ -785,7 +785,7 @@ Para comprobar que el proyecto funciona en un PC que no es el de desarrollo, `sc
 3. Ejecuta `colcon build` y `colcon test`.
 4. Lanza el modelo y la simulación sin interfaz gráfica, revisa controladores y sensores, y ejecuta la prueba de integración.
 
-La primera ejecución detectó dos dependencias no declaradas (`joint_state_publisher` y `ros2controlcli`). Una vez corregidas, la prueba pasó completa. El registro está en `docs/evidencia/prueba_en_limpio_2026-11-09.log`.
+La primera ejecución detectó dos dependencias no declaradas (`joint_state_publisher` y `ros2controlcli`). Una vez corregidas, la prueba pasó completa. Se repitió el 22-11-2026 con la versión final (física DART, garra de dos juntas y límites blandos): 31 de 31 pruebas aprobadas, controladores activos, sensores publicando y la prueba de integración completa sin errores. Registros: `docs/evidencia/prueba_en_limpio_2026-11-09.log` y `docs/evidencia/prueba_en_limpio_2026-11-22.log` (versión final).
 
 ### 7.4 Mediciones
 

@@ -228,5 +228,5 @@ Evaluacion_1/
 | 4 — micro-ROS + joystick | 🟡 código completo: firmware compilado sin advertencias y agente probado. Pruebas con la ESP32 pendientes: [`docs/pruebas_hardware.md`](docs/pruebas_hardware.md) |
 | 5 — Launch integrado | ✅ `bringup.launch.py` (con `use_microros:=true` suma el agente) |
 | 6 — Sensores básicos (cámara + IMU) | ✅ adelantada: publican y se ven en RViz |
-| 7 — Calidad y prueba en limpio | ✅ probado en un contenedor `ros:jazzy` limpio siguiendo solo este README ([evidencia](docs/evidencia/prueba_en_limpio_2026-11-09.log)) |
+| 7 — Calidad y prueba en limpio | ✅ probado en un contenedor `ros:jazzy` limpio siguiendo solo este README ([evidencia](docs/evidencia/prueba_en_limpio_2026-11-22.log)) |
 | 8 — Documentación y entrega | ✅ [`DOCUMENTACION.md`](DOCUMENTACION.md) y [presentación](presentacion/Presentacion_Octavius.pdf) |

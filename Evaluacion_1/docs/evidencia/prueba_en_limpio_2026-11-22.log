@@ -1,0 +1,55 @@
+=================== 0. Descomprimir el zip de entrega ===================
+debconf: delaying package configuration, since apt-utils is not installed
+DOCUMENTACION.md
+PLAN_DE_TRABAJO.md
+README.md
+docs
+firmware
+presentacion
+scripts
+src
+
+=================== README 2. Instalación ===================
+(rosdep ya inicializado)
+#All required rosdeps installed successfully
+rosdep exit: 0
+
+=================== README 3. Compilación ===================
+Starting >>> octavius_bringup
+Finished <<< octavius_bringup [1.79s]
+
+Summary: 2 packages finished [3.61s]
+
+=================== Tests (colcon test) ===================
+Summary: 31 tests, 0 errors, 0 failures, 0 skipped
+
+=================== README 4.1 display.launch.py (sin GUI: use_gui:=false, RViz falla sin pantalla) ===================
+['base_joint', 'shoulder_joint', 'elbow_joint', 'wrist_pitch_joint', 'wrist_roll_joint', 'gripper_left_joint', 'gripper_right_joint']
+---
+
+=================== README 4.2 bringup.launch.py headless ===================
+gripper_controller      position_controllers/JointGroupPositionController  active
+arm_controller          position_controllers/JointGroupPositionController  active
+joint_state_broadcaster joint_state_broadcaster/JointStateBroadcaster      active
+
+=================== README 5. Verificación rápida (sensores) ===================
+average rate: 14.932
+average rate: 73.106
+
+=================== Prueba funcional teclado/joystick (fase3_test.py) ===================
+1) Estado inicial
+   base=+0.000  shoulder=+0.000  elbow=+0.000  wrist_pitch=+0.000  wrist_roll=+0.000  gripper_left=+0.000
+2) Teclado: 6×w, 4×r, 3×e, a  → esperado codo +0.30, pitch +0.20, roll +0.15, garra 0.02
+   base=-0.000  shoulder=+0.000  elbow=+0.300  wrist_pitch=+0.200  wrist_roll=+0.150  gripper_left=+0.020
+3) Joystick X=+1, Y=-0.6 por 2 s → esperado base ≈ +1.0, hombro ≈ -0.6 (y quieto tras soltar: watchdog)
+   base=+1.330  shoulder=-0.798  elbow=+0.300  wrist_pitch=+0.200  wrist_roll=+0.150  gripper_left=+0.020
+4) Joystick 0.05 (bajo zona muerta 0.1) → sin cambios
+   base=+1.330  shoulder=-0.798  elbow=+0.300  wrist_pitch=+0.200  wrist_roll=+0.150  gripper_left=+0.020
+5) Codo con 100 pulsaciones → saturado en 2.336 (límite 2.356 − margen 0.02)
+   base=+1.330  shoulder=-0.798  elbow=+2.336  wrist_pitch=+0.200  wrist_roll=+0.150  gripper_left=+0.020
+6) Home (h) → todo vuelve a 0 (la garra no cambia)
+   base=+0.000  shoulder=-0.000  elbow=+0.000  wrist_pitch=+0.000  wrist_roll=+0.000  gripper_left=+0.020
+
+=================== Errores en el log del launch ===================
+
+FIN DE LA PRUEBA EN LIMPIO
