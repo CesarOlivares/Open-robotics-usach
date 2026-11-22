@@ -4,7 +4,7 @@ Presentación del proyecto con la plantilla Beamer **USACH theme** (tema Trigon)
 
 | Archivo | Contenido |
 |---|---|
-| `Presentacion_Octavius.pdf` | Presentación compilada (30 láminas) |
+| `Presentacion_Octavius.pdf` | Presentación compilada (24 láminas de exposición + anexos A–B y referencias) |
 | `main.tex` | Preámbulo de la plantilla: datos de portada, colores y paquetes |
 | `frames.tex` | Contenido: cada tema es un par *diagrama de la lógica → detalle con el código real* |
 | `referencias.bib` | Referencias en formato IEEE |

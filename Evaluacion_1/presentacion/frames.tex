@@ -95,35 +95,10 @@
     \node[num] at (jsb.north west) {5};
   \end{tikzpicture}}
   \vfill
-  {\scriptsize \textbf{1} Entrada (\texttt{Joy}) \quad \textbf{2} Integración y límites \quad \textbf{3} Controladores \quad \textbf{4} Simulación \quad \textbf{5} Medición y visualización}
+  {\scriptsize \textbf{1} Entrada (\texttt{Joy}) \quad \textbf{2} Integración y límites \quad \textbf{3} Controladores \quad \textbf{4} Simulación \quad \textbf{5} Medición y visualización}\\[1mm]
+  {\scriptsize\color{tSec} Orden de arranque de los controladores: Anexo~A.}
 \end{frame}
 
-%--------------------------------------
-\begin{frame}[fragile]{\insertsectionhead}
-  \framesubtitle{Detalle: el \textit{launch} activa los controladores en orden}
-  \begin{columns}[c, onlytextwidth]
-    \column{0.42\textwidth}
-    \centering
-    \begin{tikzpicture}[node distance=6mm]
-      \node[nodo] (a) {ros\_gz\_sim create\\{\tiny\mdseries el robot existe}};
-      \node[nodo, below=of a] (b) {joint\_state\_broadcaster};
-      \node[nodo, below=of b] (c) {arm\_controller\\gripper\_controller};
-      \draw[flecha] (a) -- node[rotulo, right] {termina} (b);
-      \draw[flecha] (b) -- node[rotulo, right] {termina} (c);
-    \end{tikzpicture}
-    \column{0.55\textwidth}
-    Si un controlador se activa \textbf{antes} de que el robot exista, falla. El \textit{launch} encadena cada paso al \textbf{fin del anterior}:
-\begin{lstlisting}[language=Python]
-RegisterEventHandler(OnProcessExit(
-    target_action=spawn_robot,
-    on_exit=[joint_state_broadcaster])),
-RegisterEventHandler(OnProcessExit(
-    target_action=joint_state_broadcaster,
-    on_exit=[arm_controller, gripper_controller])),
-\end{lstlisting}
-    {\scriptsize Archivo: \texttt{octavius\_bringup/launch/gazebo.launch.py}}
-  \end{columns}
-\end{frame}
 
 %--------------------------------------
 \subsection{Modelo URDF/XACRO}
@@ -171,7 +146,7 @@ RegisterEventHandler(OnProcessExit(
     {\LARGE\bfseries\color{tPrim} 2,435 kg}\\
     {\scriptsize masa total; alcance vertical 0,62 m}
   \end{columns}
-  \fuente{modelo URDF de Octavius \cite{urdfxacro}.}
+  \fuente{modelo URDF de Octavius \cite{urdfxacro}; tabla Denavit--Hartenberg en el Anexo~B.}
 \end{frame}
 
 %--------------------------------------
@@ -203,42 +178,6 @@ RegisterEventHandler(OnProcessExit(
   \end{columns}
 \end{frame}
 
-%--------------------------------------
-\begin{frame}{\insertsectionhead}
-  \framesubtitle{La cinemática se resume en una tabla Denavit--Hartenberg validada}
-  \begin{columns}[c, onlytextwidth]
-    \column{0.5\textwidth}
-    \begin{table}
-      \centering
-      \caption{Parámetros DH estándar de Octavius.}
-      \scriptsize
-      \begin{tabular}{@{} c c c c c @{}}
-        \toprule
-        $i$ & $\theta_i$ & $d_i$ [m] & $a_i$ [m] & $\alpha_i$ \\
-        \midrule
-        1 & $q_1$ & 0,11 & 0 & $-90^\circ$ \\
-        2 & $q_2 - 90^\circ$ & 0 & 0,25 & 0 \\
-        3 & $q_3$ & 0 & 0,20 & 0 \\
-        4 & $q_4 + 90^\circ$ & 0 & 0 & $+90^\circ$ \\
-        5 & $q_5$ & 0,06 & 0 & 0 \\
-        \bottomrule
-      \end{tabular}
-    \end{table}
-    \begin{equation}
-      A_i = R_z(\theta_i)\,T_z(d_i)\,T_x(a_i)\,R_x(\alpha_i)
-    \end{equation}
-    \column{0.46\textwidth}
-    \centering
-    {\Huge\bfseries\color{tPrim} $3\cdot10^{-16}$ m}\\
-    {\scriptsize error máximo frente al URDF en 200 poses aleatorias}
-    \vfill
-    \begin{itemize}
-      \item Coincide también con la TF real de \texttt{robot\_state\_publisher}
-      \item Se usó para calcular la pose de la Figura~1
-    \end{itemize}
-  \end{columns}
-  \fuente{convención DH de \cite{spong}; validación numérica propia \cite{octaviusdoc}.}
-\end{frame}
 
 
 %==============================================
@@ -560,6 +499,71 @@ float normalize_axis(int raw, int center) {
 \end{frame}
 
 \appendix
+
+%--------------------------------------
+\begin{frame}[fragile]{Anexo A: orden de arranque}
+  \framesubtitle{Detalle: el \textit{launch} activa los controladores en orden}
+  \begin{columns}[c, onlytextwidth]
+    \column{0.42\textwidth}
+    \centering
+    \begin{tikzpicture}[node distance=6mm]
+      \node[nodo] (a) {ros\_gz\_sim create\\{\tiny\mdseries el robot existe}};
+      \node[nodo, below=of a] (b) {joint\_state\_broadcaster};
+      \node[nodo, below=of b] (c) {arm\_controller\\gripper\_controller};
+      \draw[flecha] (a) -- node[rotulo, right] {termina} (b);
+      \draw[flecha] (b) -- node[rotulo, right] {termina} (c);
+    \end{tikzpicture}
+    \column{0.55\textwidth}
+    Si un controlador se activa \textbf{antes} de que el robot exista, falla. El \textit{launch} encadena cada paso al \textbf{fin del anterior}:
+\begin{lstlisting}[language=Python]
+RegisterEventHandler(OnProcessExit(
+    target_action=spawn_robot,
+    on_exit=[joint_state_broadcaster])),
+RegisterEventHandler(OnProcessExit(
+    target_action=joint_state_broadcaster,
+    on_exit=[arm_controller, gripper_controller])),
+\end{lstlisting}
+    {\scriptsize Archivo: \texttt{octavius\_bringup/launch/gazebo.launch.py}}
+  \end{columns}
+\end{frame}
+
+%--------------------------------------
+\begin{frame}{Anexo B: cinemática Denavit--Hartenberg}
+  \framesubtitle{Tabla validada frente al URDF y a la TF}
+  \begin{columns}[c, onlytextwidth]
+    \column{0.5\textwidth}
+    \begin{table}
+      \centering
+      \caption{Parámetros DH estándar de Octavius.}
+      \scriptsize
+      \begin{tabular}{@{} c c c c c @{}}
+        \toprule
+        $i$ & $\theta_i$ & $d_i$ [m] & $a_i$ [m] & $\alpha_i$ \\
+        \midrule
+        1 & $q_1$ & 0,11 & 0 & $-90^\circ$ \\
+        2 & $q_2 - 90^\circ$ & 0 & 0,25 & 0 \\
+        3 & $q_3$ & 0 & 0,20 & 0 \\
+        4 & $q_4 + 90^\circ$ & 0 & 0 & $+90^\circ$ \\
+        5 & $q_5$ & 0,06 & 0 & 0 \\
+        \bottomrule
+      \end{tabular}
+    \end{table}
+    \begin{equation}
+      A_i = R_z(\theta_i)\,T_z(d_i)\,T_x(a_i)\,R_x(\alpha_i)
+    \end{equation}
+    \column{0.46\textwidth}
+    \centering
+    {\Huge\bfseries\color{tPrim} $3\cdot10^{-16}$ m}\\
+    {\scriptsize error máximo frente al URDF en 200 poses aleatorias}
+    \vfill
+    \begin{itemize}
+      \item Coincide también con la TF real de \texttt{robot\_state\_publisher}
+      \item Se usó para calcular la pose de la Figura~1
+    \end{itemize}
+  \end{columns}
+  \fuente{convención DH de \cite{spong}; validación numérica propia \cite{octaviusdoc}.}
+\end{frame}
+
 
 \begin{frame}[allowframebreaks]{Referencias}
   \nocite{*}
