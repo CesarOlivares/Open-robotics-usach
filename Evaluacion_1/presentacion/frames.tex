@@ -16,17 +16,14 @@
 \begin{frame}{\insertsectionhead}
   \framesubtitle{¿Cómo se convierte una tecla en el movimiento de un brazo robótico?}
   \begin{columns}[c, onlytextwidth]
-    \column{0.47\textwidth}
-    \textbf{Octavius} es un brazo manipulador \textbf{simulado} que se controla desde ROS~2.
-    \vfill
+    \column{0.5\textwidth}
+    \textbf{Octavius}: brazo manipulador \textbf{simulado} y controlado desde ROS~2 \cite{ros2docs}.
     \begin{itemize}
       \item \textbf{6 grados de libertad}: base, hombro, codo, muñeca (inclinación y giro) y garra
-      \item \textbf{2 sensores} en el brazo: cámara en la garra e IMU en la muñeca
-      \item \textbf{Teclado} y \textbf{joystick con ESP32} (micro-ROS) como mandos
+      \item \textbf{2 sensores} en el brazo: cámara e IMU
+      \item Mandos: \textbf{teclado} y \textbf{joystick con ESP32} (micro-ROS)
     \end{itemize}
-    \vfill
-    {\small Objetivo: modelar, simular y controlar el brazo siguiendo el estándar de la documentación oficial de ROS~2 \cite{ros2docs}.}
-    \column{0.5\textwidth}
+    \column{0.46\textwidth}
     \begin{figure}
       \includegraphics[width=\textwidth]{gazebo_sobre_cubo.png}
       \caption{Octavius en Gazebo, con la garra abierta sobre un cubo.}
@@ -66,37 +63,37 @@
 \begin{frame}{\insertsectionhead}
   \framesubtitle{Un comando recorre cinco etapas, de la tecla a la física}
   \centering
-  \begin{tikzpicture}[node distance=5mm and 7mm]
-    % Entradas
-    \node[nodo] (kb) {keyboard\_teleop};
-    \node[nodo, below=4mm of kb] (esp) {ESP32 + joystick\\{\tiny\mdseries(micro-ROS)}};
-    % Integración
-    \node[clave, right=9mm of $(kb)!0.5!(esp)$] (ac) {arm\_commander};
-    % Control
-    \node[nodo, right=9mm of ac] (ctrl) {arm\_controller\\gripper\_controller};
-    % Física
-    \node[caja, right=9mm of ctrl, minimum height=12mm, text width=21mm] (gz) {\textbf{Gazebo}\\{\tiny física DART\\cámara e IMU}};
-    % Retroalimentación
-    \node[nodo, below=12mm of gz] (jsb) {joint\_state\\broadcaster};
-    \node[nodo, left=9mm of jsb] (rsp) {robot\_state\\publisher};
-    \node[caja, left=9mm of rsp] (rviz) {\textbf{RViz}};
-    \node[nodo, above=5mm of gz] (br) {ros\_gz\_bridge};
-
-    \draw[flecha] (kb) -- (ac);
-    \draw[flecha] (esp) -- (ac);
-    \draw[flecha] (ac) -- node[rotulo, above] {5 ángulos} node[rotulo, below] {50 Hz} (ctrl);
+  \resizebox{\textwidth}{!}{%
+  \begin{tikzpicture}[x=1cm, y=1cm]
+    \tikzset{num/.style={circle, fill=tPrim, text=white, font=\tiny\bfseries, inner sep=1.2pt}}
+    % Fila de comando
+    \node[nodo, text width=22mm] (kb)  at (0, 0.55)  {keyboard\_teleop};
+    \node[nodo, text width=22mm] (esp) at (0,-0.55)  {ESP32 + joystick};
+    \node[clave, text width=22mm] (ac) at (4.2, 0)   {arm\_commander};
+    \node[nodo, text width=26mm] (ctrl) at (8.6, 0)  {arm\_controller\\gripper\_controller};
+    \node[caja, text width=24mm] (gz)  at (13.2, 0)  {\textbf{Gazebo}\\{\tiny física, cámara e IMU}};
+    \node[nodo, text width=24mm] (br)  at (13.2, 1.6) {ros\_gz\_bridge};
+    % Fila de retroalimentación
+    \node[nodo, text width=24mm] (jsb) at (13.2,-2.3) {joint\_state\_\\broadcaster};
+    \node[nodo, text width=24mm] (rsp) at (8.6,-2.3)  {robot\_state\_\\publisher};
+    \node[caja, text width=22mm] (rviz) at (4.2,-2.3) {\textbf{RViz}};
+    % Flechas
+    \draw[flecha] (kb.east) -- (ac.west);
+    \draw[flecha] (esp.east) -- (ac.west);
+    \draw[flecha] (ac) -- node[rotulo, above] {5 ángulos, 50 Hz} (ctrl);
     \draw[flecha] (ctrl) -- node[rotulo, above] {posición} (gz);
-    \draw[flecha] (gz) -- node[rotulo, right] {ángulo\\medido} (jsb);
+    \draw[flecha] (gz) -- node[rotulo, right] {sensores} (br);
+    \draw[flecha] (gz) -- node[rotulo, right] {ángulo medido} (jsb);
     \draw[flecha] (jsb) -- node[rotulo, above] {/joint\_states} (rsp);
     \draw[flecha] (rsp) -- node[rotulo, above] {/tf} (rviz);
-    \draw[flecha] (gz) -- (br);
-    \draw[flecha, dashed] (jsb.west) ++(0,-2mm) -| node[rotulo, pos=0.25, below] {estado inicial} (ac.south);
-
-    % Etapas numeradas
-    \foreach \n/\who in {1/kb, 2/ac, 3/ctrl, 4/gz}
-      \node[circle, fill=tPrim, text=white, font=\tiny\bfseries, inner sep=1pt, anchor=south east] at (\who.north west) {\n};
-    \node[circle, fill=tPrim, text=white, font=\tiny\bfseries, inner sep=1pt, anchor=south east] at (jsb.north west) {5};
-  \end{tikzpicture}
+    \draw[flecha, dashed] (10.9,-2.3) -- (10.9,-1.2) -- node[rotulo, below, pos=0.5] {estado inicial} (4.2,-1.2) -- (ac.south);
+    % Etapas
+    \node[num] at (kb.north west) {1};
+    \node[num] at (ac.north west) {2};
+    \node[num] at (ctrl.north west) {3};
+    \node[num] at (gz.north west) {4};
+    \node[num] at (jsb.north west) {5};
+  \end{tikzpicture}}
   \vfill
   {\scriptsize \textbf{1} Entrada (\texttt{sensor\_msgs/Joy}) \quad \textbf{2} Integración y límites \quad \textbf{3} Controladores \quad \textbf{4} Simulación física \quad \textbf{5} Medición y visualización}
 \end{frame}
@@ -132,41 +129,47 @@ RegisterEventHandler(OnProcessExit(
 \subsection{Modelo URDF/XACRO}
 \begin{frame}{\insertsectionhead}
   \framesubtitle{El brazo es una cadena de links unidos por articulaciones}
+  \centering
+  \begin{tikzpicture}[x=1cm, y=1cm]
+    \tikzset{link/.style={caja, text width=19mm, font=\tiny\ttfamily, minimum height=6mm},
+             junta/.style={circle, draw=tPrim, fill=tPrim!12, font=\tiny\bfseries, inner sep=1.5pt}}
+    % Fila 1 (izquierda a derecha)
+    \node[link] (l0) at (0,0)    {base\_link};
+    \node[junta] (j1) at (1.75,0) {1};
+    \node[link] (l1) at (3.5,0)  {turret\_link};
+    \node[junta] (j2) at (5.25,0) {2};
+    \node[link] (l2) at (7.0,0)  {upper\_arm\_link};
+    \node[junta] (j3) at (8.75,0) {3};
+    \node[link] (l3) at (10.5,0) {forearm\_link};
+    % Bajada
+    \node[junta] (j4) at (10.5,-1.15) {4};
+    % Fila 2 (derecha a izquierda)
+    \node[link] (l4) at (10.5,-2.3) {wrist\_link};
+    \node[junta] (j5) at (8.75,-2.3) {5};
+    \node[link] (l5) at (7.0,-2.3)  {gripper\_base\_link};
+    \node[junta] (j6) at (5.25,-2.3) {6};
+    \node[link] (l6) at (3.5,-2.3)  {2 dedos};
+    \foreach \a/\b in {l0/j1, j1/l1, l1/j2, j2/l2, l2/j3, j3/l3, l3/j4, j4/l4, l4/j5, j5/l5, l5/j6, j6/l6}
+      \draw[line width=0.6pt] (\a) -- (\b);
+    % Rótulos de cada articulación
+    \node[rotulo, below=1mm of j1] {base\\Z, $\pm180^\circ$};
+    \node[rotulo, below=1mm of j2] {hombro\\Y, $\pm90^\circ$};
+    \node[rotulo, below=1mm of j3] {codo\\Y, $\pm135^\circ$};
+    \node[rotulo, right=1mm of j4] {muñeca pitch, Y, $\pm90^\circ$};
+    \node[rotulo, below=1mm of j5] {muñeca roll\\Z, $\pm180^\circ$};
+    \node[rotulo, below=1mm of j6] {garra\\0 a 25 mm};
+  \end{tikzpicture}
+  \vfill
   \begin{columns}[c, onlytextwidth]
-    \column{0.55\textwidth}
-    \centering
-    \begin{tikzpicture}[node distance=2.2mm]
-      \tikzset{link/.style={caja, minimum width=28mm, font=\tiny\ttfamily},
-               junta/.style={circle, draw=tPrim, fill=tPrim!12, font=\tiny\bfseries, inner sep=1.2pt}}
-      \node[link] (l0) {base\_link};
-      \node[junta, below=of l0] (j1) {1};
-      \node[link, below=of j1] (l1) {turret\_link};
-      \node[junta, below=of l1] (j2) {2};
-      \node[link, below=of j2] (l2) {upper\_arm\_link};
-      \node[junta, below=of l2] (j3) {3};
-      \node[link, below=of j3] (l3) {forearm\_link};
-      \node[junta, below=of l3] (j4) {4};
-      \node[link, below=of j4] (l4) {wrist\_link};
-      \node[junta, below=of l4] (j5) {5};
-      \node[link, below=of j5] (l5) {gripper\_base\_link};
-      \foreach \a/\b in {l0/j1, j1/l1, l1/j2, j2/l2, l2/j3, j3/l3, l3/j4, j4/l4, l4/j5, j5/l5}
-        \draw[line width=0.6pt] (\a) -- (\b);
-      \foreach \j/\t in {j1/{base, eje Z, $\pm180^\circ$}, j2/{hombro, eje Y, $\pm90^\circ$}, j3/{codo, eje Y, $\pm135^\circ$}, j4/{muñeca pitch, eje Y, $\pm90^\circ$}, j5/{muñeca roll, eje Z, $\pm180^\circ$}}
-        \node[rotulo, anchor=west] at ($(\j.east)+(13mm,0)$) {\t};
-      \node[junta, right=12mm of l5] (j6) {6};
-      \node[rotulo, anchor=west, right=1mm of j6] {garra: 2 dedos,\\mismo comando};
-      \draw[line width=0.6pt] (l5) -- (j6);
-    \end{tikzpicture}
-    \column{0.42\textwidth}
+    \column{0.64\textwidth}
     \begin{itemize}
-      \item \textbf{Link}: cuerpo rígido con forma, masa e inercia
-      \item \textbf{Joint}: articulación con eje y límites
-      \item Todas las medidas y límites en \textbf{un solo archivo}: \texttt{octavius\_params.xacro}
+      \item \textbf{Link}: cuerpo rígido con forma, masa e inercia; \textbf{joint}: eje y límites
+      \item Medidas y límites en \textbf{un solo archivo}: \texttt{octavius\_params.xacro}
     \end{itemize}
-    \vfill
+    \column{0.33\textwidth}
     \centering
-    {\Huge\bfseries\color{tPrim} 2,435 kg}\\
-    {\scriptsize masa total del brazo; alcance vertical de \textbf{0,62 m}}
+    {\LARGE\bfseries\color{tPrim} 2,435 kg}\\
+    {\scriptsize masa total; alcance vertical 0,62 m}
   \end{columns}
   \fuente{modelo URDF de Octavius \cite{urdfxacro}.}
 \end{frame}
@@ -191,7 +194,7 @@ RegisterEventHandler(OnProcessExit(
     \begin{tikzpicture}[node distance=5mm]
       \node[clave, text width=40mm] (m) {macro arm\_revolute};
       \node[caja, below=of m, text width=40mm] (p) {\texttt{octavius\_params.xacro}\\{\tiny límites, velocidad, torque}};
-      \node[caja, below=of p, text width=40mm] (j) {\texttt{<joint type="revolute">}\\{\tiny URDF completo}};
+      \node[caja, below=of p, text width=40mm] (j) {\texttt{\textless joint type=\textquotedbl revolute\textquotedbl\textgreater}\\{\tiny URDF completo}};
       \draw[flecha] (m) -- (p);
       \draw[flecha] (p) -- node[rotulo, right] {xacro} (j);
     \end{tikzpicture}
@@ -247,7 +250,7 @@ RegisterEventHandler(OnProcessExit(
     \column{0.58\textwidth}
     \centering
     \begin{tikzpicture}[node distance=4mm]
-      \node[caja, text width=36mm] (u) {\texttt{<sensor>} en el URDF\\{\tiny ubicación en el brazo}};
+      \node[caja, text width=36mm] (u) {\texttt{\textless sensor\textgreater} en el URDF\\{\tiny ubicación en el brazo}};
       \node[caja, below=of u, text width=36mm] (s) {Sistema de Gazebo\\{\tiny genera la medición}};
       \node[topico, below=of s, text width=36mm] (gt) {tópico de Gazebo\\(gz-transport)};
       \node[clave, below=of gt, text width=36mm] (b) {ros\_gz\_bridge};
@@ -269,8 +272,8 @@ RegisterEventHandler(OnProcessExit(
 \begin{frame}[fragile]{\insertsectionhead}
   \framesubtitle{Detalle: el puente se configura por tópico, y la IMU mide lo esperado}
   \begin{columns}[c, onlytextwidth]
-    \column{0.44\textwidth}
-    Cada entrada del YAML conecta \textbf{un} tópico de Gazebo con \textbf{uno} de ROS~2:
+    \column{0.45\textwidth}
+    Una entrada del YAML une \textbf{un} tópico de Gazebo con \textbf{uno} de ROS~2:
 \begin{lstlisting}
 - ros_topic_name: "/octavius/imu"
   gz_topic_name: "/octavius/imu"
@@ -278,12 +281,13 @@ RegisterEventHandler(OnProcessExit(
   gz_type_name: "gz.msgs.IMU"
   direction: GZ_TO_ROS
 \end{lstlisting}
-    {\scriptsize Archivo: \texttt{octavius\_bringup/config/gz\_bridge.yaml}}
-    \vfill
+    {\tiny Archivo: \texttt{config/gz\_bridge.yaml}}
+    \vspace{0.6em}
+
     \centering
-    {\Huge\bfseries\color{tPrim} 0,498 rad/s}\\
-    {\scriptsize medido por la IMU; esperado 0,5 rad/s (error 0,3\,\%)}
-    \column{0.53\textwidth}
+    {\LARGE\bfseries\color{tPrim} 0,498 rad/s}\\
+    {\scriptsize medido por la IMU; esperado 0,5 (error 0,3\,\%)}
+    \column{0.52\textwidth}
     \begin{figure}
       \includegraphics[width=\textwidth]{grafico_imu.png}
       \caption{Velocidad angular de la IMU mientras el joystick gira la base al máximo.}
@@ -354,26 +358,27 @@ RegisterEventHandler(OnProcessExit(
 \begin{frame}{\insertsectionhead}
   \framesubtitle{Un solo nodo une el teclado y el joystick en un mismo comando}
   \centering
-  \begin{tikzpicture}[node distance=4mm and 8mm]
-    \node[nodo, text width=27mm] (js) {Joystick\\{\tiny\mdseries modo velocidad}};
-    \node[nodo, text width=27mm, below=6mm of js] (kb) {Teclado\\{\tiny\mdseries modo paso}};
-    \node[caja, right=10mm of js, text width=34mm] (iv) {$q \leftarrow q + v\,\omega_{max}\,\Delta t$\\{\tiny base y hombro}};
-    \node[caja, right=10mm of kb, text width=34mm] (st) {$q \leftarrow q \pm 0{,}05$ rad\\{\tiny codo y muñeca}};
-    \node[clave, right=10mm of $(iv)!0.5!(st)$, text width=27mm] (sat) {saturar en\\límites blandos};
-    \node[topico, right=8mm of sat, text width=24mm] (out) {/arm\_controller/\\commands};
+  \begin{tikzpicture}[x=1cm, y=1cm]
+    \node[nodo, text width=19mm] (js) at (0, 0.75)  {Joystick\\{\tiny\mdseries modo velocidad}};
+    \node[nodo, text width=19mm] (kb) at (0,-0.75)  {Teclado\\{\tiny\mdseries modo paso}};
+    \node[caja, text width=31mm] (iv) at (3.7, 0.75) {$q \leftarrow q + v\,\omega_{max}\,\Delta t$\\{\tiny base y hombro}};
+    \node[caja, text width=31mm] (st) at (3.7,-0.75) {$q \leftarrow q \pm 0{,}05$ rad\\{\tiny codo y muñeca}};
+    \node[clave, text width=23mm] (sat) at (7.55, 0) {saturar en\\límites blandos};
+    \node[topico, text width=26mm] (out) at (11.0, 0) {/arm\_controller/commands};
     \draw[flecha] (js) -- (iv);
     \draw[flecha] (kb) -- (st);
-    \draw[flecha] (iv) -- (sat);
-    \draw[flecha] (st) -- (sat);
+    \draw[flecha] (iv.east) -- (sat.north west);
+    \draw[flecha] (st.east) -- (sat.south west);
     \draw[flecha] (sat) -- node[rotulo, above] {50 Hz} (out);
-    \node[grupo, fit=(iv)(st)(sat), label={[rotulo]above:arm\_commander}] {};
+    \node[grupo, fit=(iv)(st)(sat)] (g) {};
+    \node[rotulo, anchor=south] at (g.north) {\texttt{arm\_commander}};
   \end{tikzpicture}
   \vfill
   \begin{columns}[t, onlytextwidth]
     \column{0.32\textwidth}
-    {\small\textbf{Por qué un nodo}: el controlador necesita \textbf{los 5 ángulos juntos}; dos fuentes por separado se pisarían.}
+    {\small\textbf{Un solo nodo}: el controlador necesita \textbf{los 5 ángulos juntos}; dos fuentes por separado se pisarían.}
     \column{0.32\textwidth}
-    {\small\textbf{Límites blandos}: 0,02 rad antes de cada tope físico.}
+    {\small\textbf{Límites blandos}: se detiene 0,02 rad antes de cada tope físico.}
     \column{0.32\textwidth}
     {\small\textbf{Seguridad}: sin datos del joystick por 0,5 s, base y hombro se detienen.}
   \end{columns}
@@ -383,21 +388,23 @@ RegisterEventHandler(OnProcessExit(
 \begin{frame}[fragile]{\insertsectionhead}
   \framesubtitle{Detalle: integrar y saturar son dos líneas de código}
   \begin{columns}[c, onlytextwidth]
-    \column{0.5\textwidth}
+    \column{0.52\textwidth}
 \begin{lstlisting}[language=Python]
 def clamp(value, limits):
     lower, upper = limits
     return max(lower, min(upper, value))
 
-def integrate_velocity(target, axis, max_velocity,
-                       dt, limits):
-    return clamp(target + axis * max_velocity * dt,
-                 limits)
+def integrate_velocity(target, axis,
+                       max_velocity, dt, limits):
+    return clamp(
+        target + axis * max_velocity * dt,
+        limits)
 \end{lstlisting}
-    {\scriptsize Archivo: \texttt{octavius\_bringup/arm\_logic.py} (sin ROS, con pruebas unitarias)}
-    \vfill
-    {\small Ejemplo: joystick a tope ($v = 1$), $\omega_{max} = 0{,}5$ rad/s y $\Delta t = 0{,}02$ s $\Rightarrow$ la base avanza \textbf{0,01 rad por ciclo}.}
-    \column{0.47\textwidth}
+    {\tiny Extracto de \texttt{arm\_logic.py}, sin anotaciones de tipo ni docstrings. Se prueba sin ROS.}
+    \vspace{0.5em}
+
+    {\small Joystick a tope ($v = 1$), $\omega_{max} = 0{,}5$ rad/s, $\Delta t = 0{,}02$ s $\Rightarrow$ \textbf{0,01 rad por ciclo}.}
+    \column{0.45\textwidth}
     \begin{figure}
       \includegraphics[width=\textwidth]{grafico_respuesta_articular.png}
       \caption{Objetivo y posición medida: base con joystick (izq.) y codo con 8 pulsaciones (der.).}
@@ -413,18 +420,18 @@ def integrate_velocity(target, axis, max_velocity,
 \begin{frame}{\insertsectionhead}
   \framesubtitle{La ESP32 publica el joystick como un nodo más de ROS~2}
   \centering
-  \begin{tikzpicture}[node distance=4mm and 5mm]
-    \node[caja] (adc) {ADC 12 bits\\{\tiny 0 a 4095}};
-    \node[caja, right=of adc] (cal) {centro medido\\{\tiny al encender}};
-    \node[caja, right=of cal] (nor) {normalizar\\{\tiny a $[-1, 1]$}};
-    \node[nodo, right=of nor] (joy) {sensor\_msgs/Joy\\{\tiny\mdseries 20 Hz}};
-    \node[grupo, fit=(adc)(cal)(nor)(joy), label={[rotulo]above:ESP32 (firmware micro\_ros\_arduino)}] (esp) {};
-    \node[clave, below=10mm of nor] (ag) {micro\_ros\_agent\\{\tiny\mdseries en el PC}};
-    \node[nodo, right=8mm of ag] (ac) {arm\_commander};
+  \begin{tikzpicture}[x=1cm, y=1cm]
+    \node[caja, text width=18mm] (adc) at (0,0)   {ADC 12 bits\\{\tiny 0 a 4095}};
+    \node[caja, text width=18mm] (cal) at (2.7,0) {centro medido\\{\tiny al encender}};
+    \node[caja, text width=18mm] (nor) at (5.4,0) {normalizar\\{\tiny a $[-1, 1]$}};
+    \node[nodo, text width=22mm] (joy) at (8.3,0) {sensor\_msgs/Joy\\{\tiny\mdseries 20 Hz}};
+    \node[grupo, fit=(adc)(cal)(nor)(joy)] (esp) {};
+    \node[rotulo, anchor=south] at (esp.north) {ESP32 --- firmware \texttt{micro\_ros\_arduino}};
+    \node[clave, text width=24mm] (ag) at (5.4,-2.2) {micro\_ros\_agent\\{\tiny\mdseries en el PC}};
+    \node[nodo, text width=22mm] (ac) at (11.0,-2.2) {arm\_commander};
     \foreach \a/\b in {adc/cal, cal/nor, nor/joy} \draw[flecha] (\a) -- (\b);
-    \draw[flecha] (joy.south) |- node[rotulo, pos=0.25, right] {USB serial\\XRCE-DDS} (ag.east);
-    \draw[flecha] (ag.west) -- ++(-12mm,0) node[rotulo, left] {DDS} ;
-    \draw[flecha] (ag) -- node[rotulo, above] {/octavius/joystick} (ac);
+    \draw[flecha] (joy.south) -- (8.3,-1.2) -- node[rotulo, above, pos=0.5] {USB serial (XRCE-DDS)} (5.4,-1.2) -- (ag.north);
+    \draw[flecha] (ag) -- node[rotulo, above] {DDS} node[rotulo, below] {\texttt{/octavius/joystick}} (ac);
   \end{tikzpicture}
   \vfill
   \begin{columns}[t, onlytextwidth]
@@ -545,8 +552,11 @@ float normalize_axis(int raw, int center) {
 \end{frame}
 
 %--------------------------------------
-\begin{frame}[standout]
-  ¿Preguntas?
+\begin{frame}{Preguntas}
+  \centering
+  {\Huge\bfseries\color{tAccent} ¿Preguntas?}
+  \vfill
+  {\small Código, documentación y pruebas: carpeta \texttt{Evaluacion\_1} del repositorio del proyecto.}
 \end{frame}
 
 \appendix

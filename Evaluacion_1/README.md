@@ -201,6 +201,7 @@ Evaluacion_1/
 ├── DOCUMENTACION.md               documentación técnica y tutorial completo
 ├── PLAN_DE_TRABAJO.md
 ├── docs/                          circuito del joystick y protocolo de pruebas con hardware
+├── presentacion/                  presentación Beamer (plantilla USACH) y su PDF
 ├── firmware/octavius_joystick/    firmware de la ESP32 (micro_ros_arduino)
 ├── scripts/                       zip de entrega y pruebas de integración / en limpio
 └── src/
@@ -228,4 +229,4 @@ Evaluacion_1/
 | 5 — Launch integrado | ✅ `bringup.launch.py` (con `use_microros:=true` suma el agente) |
 | 6 — Sensores básicos (cámara + IMU) | ✅ adelantada: publican y se ven en RViz |
 | 7 — Calidad y prueba en limpio | ✅ probado en un contenedor `ros:jazzy` limpio siguiendo solo este README ([evidencia](docs/evidencia/prueba_en_limpio_2026-11-09.log)) |
-| 8 — Documentación y entrega | 🟡 [`DOCUMENTACION.md`](DOCUMENTACION.md) completo; presentación aparte |
+| 8 — Documentación y entrega | ✅ [`DOCUMENTACION.md`](DOCUMENTACION.md) y [presentación](presentacion/Presentacion_Octavius.pdf) |

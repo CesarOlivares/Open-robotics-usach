@@ -20,3 +20,4 @@ presentacion/*.blg
 presentacion/*.fls
 presentacion/*.fdb_latexmk
 presentacion/*.synctex.gz
+presentacion/main.pdf
