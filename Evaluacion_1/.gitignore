@@ -6,3 +6,17 @@ __pycache__/
 
 # Zip de entrega (se genera con scripts/make_release.sh)
 *.zip
+
+# Archivos auxiliares de LaTeX (presentación)
+presentacion/*.aux
+presentacion/*.log
+presentacion/*.nav
+presentacion/*.out
+presentacion/*.snm
+presentacion/*.toc
+presentacion/*.vrb
+presentacion/*.bbl
+presentacion/*.blg
+presentacion/*.fls
+presentacion/*.fdb_latexmk
+presentacion/*.synctex.gz

@@ -1,0 +1,83 @@
+\documentclass[aspectratio=169]{beamer}
+
+%Textos en español (es-tabla: los cuadros se rotulan "Tabla")
+\usepackage[spanish,es-tabla]{babel}
+
+% Document metadata
+\title{Octavius: brazo manipulador de 6 GDL}
+\subtitle{Simulación y control con ROS~2, Gazebo y micro-ROS}
+\author[COL]{Cesar Olivares Lavalovich \\[0.4em] {\small Profesor: Jose Pascal}}
+\institute{Universidad de Santiago de Chile}
+\date{Open Robotics --- 21 de noviembre de 2026}
+
+% Imagen para la página del título (utilice la opción includegraphics para dimensionarla/ubicarla correctamente)
+\titlegraphic{\includegraphics[height=\paperheight]{usach.jpg}}
+
+\usetheme[sectionstyle=style2]{trigon}
+
+% Definir los logotipos a utilizar (comentar si no hay logotipo)
+\biglogo{usach_logo.jpg} % Se utiliza sólo en la portada
+\smalllogo{logo_small.png} % Se utiliza en la esquina superior derecha de los marcos normales
+
+% ------ Si quieres cambiar los colores por defecto del tema, hazlo aquí ------
+\definecolor{tPrim}{HTML}{EA7600}   % 716
+\definecolor{tSec}{HTML}{B1B1B1}    % cool gray
+\definecolor{tAccent}{HTML}{002F6C} % 294
+
+
+% ------ Paquetes usados por el contenido ------
+\usepackage{appendixnumberbeamer} % \appendix sin numeración
+\pdfstringdefDisableCommands{% Fix hyperref translate warning with \appendix
+\def\translate#1{#1}%
+}
+\usepackage{booktabs} % Tablas
+\usepackage{caption}
+\usepackage{listings} % Fragmentos de código
+\usepackage{tikz}     % Diagramas
+\usetikzlibrary{positioning, arrows.meta, calc, fit, babel}
+
+% Figuras, tablas y ecuaciones numeradas
+\setbeamertemplate{caption}[numbered]
+\captionsetup{font=scriptsize, labelfont={bf,color=tAccent}}
+
+% Fuentes de los datos, al pie de la lámina
+\newcommand{\fuente}[1]{\par\vfill{\tiny\color{gray}Fuente: #1}}
+
+% ------ Estilo de los fragmentos de código ------
+\lstdefinestyle{octavius}{
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{tAccent}\bfseries,
+  commentstyle=\color{gray}\itshape,
+  stringstyle=\color{tPrim!85!black},
+  numbers=left, numberstyle=\tiny\color{gray}, numbersep=6pt,
+  frame=leftline, framerule=2pt, rulecolor=\color{tPrim},
+  xleftmargin=1.6em, aboveskip=0.3em, belowskip=0.2em,
+  showstringspaces=false, columns=fullflexible, keepspaces=true,
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1,
+}
+\lstset{style=octavius}
+\lstdefinelanguage{XML2}{language=XML, morekeywords={name,type,axis,lower,upper,xyz,rpy}}
+
+% ------ Estilos de los diagramas (colores del tema) ------
+\tikzset{
+  caja/.style={draw=black, line width=0.5pt, fill=white, align=center,
+               font=\scriptsize, inner sep=3pt, minimum height=7mm},
+  nodo/.style={caja, draw=tAccent, fill=tAccent!7, font=\scriptsize\bfseries},
+  topico/.style={caja, draw=tSec!80!black, fill=tSec!18, font=\tiny\ttfamily},
+  clave/.style={caja, draw=tPrim, fill=tPrim!10, font=\scriptsize\bfseries},
+  flecha/.style={-{Stealth[length=2mm]}, line width=0.7pt, draw=black!70},
+  rotulo/.style={font=\tiny, text=black!70, align=center},
+  grupo/.style={draw=tSec, dashed, rounded corners=2pt, inner sep=5pt},
+}
+
+% Rutas de imágenes: figuras del proyecto (docs/img)
+\graphicspath{{../docs/img/}{./}}
+
+%==============================================================================
+%                               COMENZAR DOCUMENTO
+%==============================================================================
+\begin{document}
+
+\include{frames}
+
+\end{document}
