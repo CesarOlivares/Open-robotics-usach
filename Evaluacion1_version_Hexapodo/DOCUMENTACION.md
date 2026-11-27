@@ -151,3 +151,87 @@ ros2 launch hexapod_description display.launch.py                  # hexápodo, 
 ros2 launch hexapod_description display.launch.py model:=leg_test   # una pata
 python3 analysis/plot_layout.py                                     # regenera la figura
 ```
+
+---
+
+## E3 — De pie en Gazebo
+
+**Conceptos**
+
+- **Base flotante:** nada une el cuerpo al mundo. El robot se sostiene solo
+  si los pies tocan el suelo, la fricción impide que resbalen y los servos
+  aguantan el peso.
+- **gz_ros2_control:** conecta ros2_control con el motor de física. Por
+  cada articulación ofrece una interfaz de **comando** de posición y de
+  **estado** de posición, velocidad y torque (`effort`). En modo posición
+  manda a la junta una velocidad proporcional al error. El motor de física
+  la limita con el torque (1,08 N·m) y la velocidad (7,48 rad/s) del URDF:
+  un servo simulado no puede hacer más fuerza que el real.
+- **Contacto:** pie esférico con μ = 1 y un contacto algo blando (kp, kd,
+  minDepth en `gazebo.xacro`) para que no rebote ni tiemble.
+- **Odometría de referencia:** el plugin `OdometryPublisher` publica la pose
+  real del cuerpo (`/hexapod/odom` y la TF `odom → base_link`). No es un
+  sensor del robot real; sirve para medir en la simulación.
+
+**Qué se hizo**
+
+| Archivo | Rol |
+|---|---|
+| `hexapod_description/urdf/ros2_control.xacro` | 18 articulaciones con comando de posición y estados posición/velocidad/torque |
+| `hexapod_description/urdf/gazebo.xacro` | Contacto de los pies y odometría de referencia |
+| `hexapod_bringup/config/controllers.yaml` | `joint_state_broadcaster` + `legs_controller` (JointGroupPositionController, 18 juntas) |
+| `hexapod_bringup/config/gait.yaml` | Posturas recogida y de pie, tiempos |
+| `hexapod_bringup/config/gz_bridge.yaml` | `/clock`, `/hexapod/odom`, `/tf` |
+| `hexapod_bringup/worlds/hexapod_world.sdf` | Suelo plano y tres objetos al frente para la cámara |
+| `hexapod_bringup/launch/gazebo.launch.py` | Gazebo → robot → broadcaster → controlador → `gait_node`, en ese orden |
+| `hexapod_control/robot_model.py` | Lee del URDF el montaje y la geometría de cada pata; cambia entre marco del cuerpo y de la pata |
+| `hexapod_control/gait_node.py` | Postura suave (en E4 suma la marcha) |
+
+**Postura suave en 3 fases** (`gait_node`)
+
+1. **Recoger** (1 s): desde los ángulos medidos hasta las patas recogidas,
+   articulación por articulación. El cuerpo sigue apoyado en la batería.
+2. **Parar** (2,5 s): los pies bajan en línea recta, con IK en cada paso,
+   hasta la postura de pie. El cuerpo sube de 47,5 a 100 mm.
+3. **De pie:** mantiene la postura.
+
+Las interpolaciones usan s(t) = (1 − cos πt)/2, que parte y llega con
+velocidad cero.
+
+**Problemas encontrados y cómo se resolvieron**
+
+| Problema | Causa | Solución |
+|---|---|---|
+| `gait_node` se detuvo: tibia −2,585 rad fuera de [−2,5; 0,6] | La postura recogida (pie a 60 mm del fémur) exigía doblar la tibia 148° | Pie recogido a 80 mm: tibia −2,35 rad (135°). La IK avisó con un error en vez de mandar un ángulo imposible |
+| El robot no se levantaba: tibias trabadas a −0,99 rad | El nodo leyó el tiempo antes de que llegara `/clock` (t = 0), se saltó las fases y pidió la postura de pie desde las patas rectas. Los pies apoyaron lejos (22 cm del eje) y la fricción los trabó | Esperar a que el tiempo simulado sea > 0. Con la fase de recoger, los pies apoyan cerca y el cuerpo sube sin trabarse |
+
+Lección para el robot real: **nunca pasar directo de patas estiradas a la
+postura de pie.** Primero recoger, después bajar los pies.
+
+**Evidencia**
+
+| Entregable | Comprobación | Resultado |
+|---|---|---|
+| D8 de pie 60 s | `scripts/medir_postura.py --segundos 60` (odometría de referencia, desde 5 s después de levantarse) | Altura 100,00 mm, variación ±0,00 mm, inclinación 0°, deriva 0 mm ✅ |
+| D9 controladores | `ros2 control list_controllers` | `joint_state_broadcaster` y `legs_controller` *active* ✅ |
+| Consistencia | `test_config_consistency.py`: orden de las 18 juntas igual en `controllers.yaml` y `gait_node`; posturas de `gait.yaml` dentro de los límites | ✅ |
+
+**Primer dato de torque para E8** (interfaz `effort`, peor articulación):
+
+| Articulación | De pie (6 patas apoyadas) | Pico durante la subida | % del torque de bloqueo (1,08 N·m) |
+|---|---|---|---|
+| Coxa | ≈ 0 | 0,19 N·m | 17 % |
+| Fémur | 0,16 N·m | 0,58 N·m | 54 % |
+| Tibia | 0,01 N·m | 0,64 N·m | 59 % |
+
+De pie, la tibia casi no trabaja porque el pie queda bajo la rodilla. El
+pico es al levantar el cuerpo. La marcha (E4) apoya en 3 patas y no en 6,
+así que hay que medir de nuevo ahí.
+
+**Cómo verlo**
+
+```bash
+ros2 launch hexapod_bringup gazebo.launch.py                 # Gazebo + RViz
+python3 scripts/medir_postura.py --segundos 60               # en otra terminal
+ros2 control list_controllers
+```

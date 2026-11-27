@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<!--
+  Declaración del hardware para ros2_control (pauta P6).
+
+  El bloque <ros2_control> le dice al controller_manager qué articulaciones
+  existen y qué INTERFACES ofrece cada una:
+    command_interface "position"  ángulo objetivo [rad] (lo que se ordena)
+    state_interface   "position"  ángulo medido (como un encoder ideal)
+    state_interface   "velocity"  velocidad medida
+    state_interface   "effort"    torque que hace la junta [N·m] (para
+                                  comparar con el del servo en E8)
+
+  El plugin de hardware es gz_ros2_control/GazeboSimSystem: en vez de motores
+  reales, lee y escribe las juntas de Gazebo. Con interfaz de posición cierra
+  el lazo solo: manda a la junta una velocidad proporcional al error, y el
+  motor de física la limita con el torque (effort) y la velocidad del URDF,
+  que son los del MG996R. Así un servo no puede hacer más fuerza que la real.
+
+  En el robot real este bloque cambiaría de plugin (un driver para las
+  PCA9685) y los controladores quedarían iguales.
+
+  Argumento:
+    controllers_file  ruta absoluta del YAML de controladores; la entrega el
+                      launch de Gazebo (hexapod_bringup). Vacío en RViz.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="position_joint" params="name">
+    <joint name="${name}">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="leg_joints" params="prefix">
+    <xacro:position_joint name="${prefix}_coxa_joint"/>
+    <xacro:position_joint name="${prefix}_femur_joint"/>
+    <xacro:position_joint name="${prefix}_tibia_joint"/>
+  </xacro:macro>
+
+  <xacro:macro name="hexapod_ros2_control" params="controllers_file">
+
+    <ros2_control name="HexapodGazeboSystem" type="system">
+      <hardware>
+        <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+      </hardware>
+      <xacro:leg_joints prefix="lf"/>
+      <xacro:leg_joints prefix="lm"/>
+      <xacro:leg_joints prefix="lr"/>
+      <xacro:leg_joints prefix="rf"/>
+      <xacro:leg_joints prefix="rm"/>
+      <xacro:leg_joints prefix="rr"/>
+    </ros2_control>
+
+    <!-- Levanta un controller_manager dentro de Gazebo con estos controladores -->
+    <gazebo>
+      <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <parameters>${controllers_file}</parameters>
+      </plugin>
+    </gazebo>
+
+  </xacro:macro>
+
+</robot>

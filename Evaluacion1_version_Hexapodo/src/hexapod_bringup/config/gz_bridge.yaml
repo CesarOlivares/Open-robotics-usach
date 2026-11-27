@@ -1,0 +1,26 @@
+# Configuración de ros_gz_bridge (parameter_bridge).
+#
+# Gazebo y ROS 2 usan sistemas de mensajes distintos (gz-transport y DDS).
+# Cada entrada crea un puente para un tópico; GZ_TO_ROS: Gazebo publica,
+# ROS recibe.
+
+# Reloj de la simulación: los nodos con use_sim_time:=true lo usan.
+- ros_topic_name: "/clock"
+  gz_topic_name: "/clock"
+  ros_type_name: "rosgraph_msgs/msg/Clock"
+  gz_type_name: "gz.msgs.Clock"
+  direction: GZ_TO_ROS
+
+# Odometría de referencia (pose real del cuerpo en el mundo).
+- ros_topic_name: "/hexapod/odom"
+  gz_topic_name: "/hexapod/odom"
+  ros_type_name: "nav_msgs/msg/Odometry"
+  gz_type_name: "gz.msgs.Odometry"
+  direction: GZ_TO_ROS
+
+# La misma pose como TF odom → base_link, para ver al robot moverse en RViz.
+- ros_topic_name: "/tf"
+  gz_topic_name: "/hexapod/odom_tf"
+  ros_type_name: "tf2_msgs/msg/TFMessage"
+  gz_type_name: "gz.msgs.Pose_V"
+  direction: GZ_TO_ROS

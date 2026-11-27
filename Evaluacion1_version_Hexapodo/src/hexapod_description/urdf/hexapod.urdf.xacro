@@ -9,6 +9,9 @@
      ├─ imu_link, camera_link ─ camera_optical_link
      └─ 6 × { coxa_servo_link, coxa ─ fémur ─ tibia ─ pie }   (18 articulaciones)
 
+  Además: ros2_control.xacro (interfaces para Gazebo) y gazebo.xacro
+  (contacto de los pies y odometría de referencia).
+
   Patas, en los vértices del hexágono (ángulo desde +x, antihorario):
        lf  +30°   (izquierda adelante)     rf  −30°   (derecha adelante)
        lm  +90°   (izquierda medio)        rm  −90°   (derecha medio)
@@ -18,6 +21,9 @@
 -->
 <robot name="hexapod" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+  <!-- Ruta del YAML de controladores: la entrega el launch de Gazebo -->
+  <xacro:arg name="controllers_file" default=""/>
+
   <xacro:include filename="$(find hexapod_description)/urdf/hexapod_params.xacro"/>
   <xacro:include filename="$(find hexapod_description)/urdf/materials.xacro"/>
   <xacro:include filename="$(find hexapod_description)/urdf/macros/inertial.xacro"/>
@@ -25,6 +31,8 @@
   <xacro:include filename="$(find hexapod_description)/urdf/components.xacro"/>
   <xacro:include filename="$(find hexapod_description)/urdf/sensors.xacro"/>
   <xacro:include filename="$(find hexapod_description)/urdf/leg.xacro"/>
+  <xacro:include filename="$(find hexapod_description)/urdf/ros2_control.xacro"/>
+  <xacro:include filename="$(find hexapod_description)/urdf/gazebo.xacro"/>
 
   <xacro:hexapod_body/>
   <xacro:hexapod_components/>
@@ -43,5 +51,8 @@
   <xacro:mounted_leg prefix="rf" deg="-30"/>
   <xacro:mounted_leg prefix="rm" deg="-90"/>
   <xacro:mounted_leg prefix="rr" deg="-150"/>
+
+  <xacro:hexapod_ros2_control controllers_file="$(arg controllers_file)"/>
+  <xacro:hexapod_gazebo/>
 
 </robot>

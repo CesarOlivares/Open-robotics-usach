@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!--
+  Ajustes solo para Gazebo: contacto de los pies y odometría de referencia.
+
+  Contacto (pauta P6): el pie es una esfera que toca el suelo en un punto.
+    mu1, mu2   coeficientes de fricción. 1,0 ≈ goma sobre suelo seco: el pie
+               de apoyo no resbala mientras el cuerpo avanza.
+    kp, kd     rigidez [N/m] y amortiguamiento [N·s/m] del contacto. Un
+               contacto algo blando evita que el robot rebote al apoyar.
+    minDepth   penetración [m] permitida antes de empujar: quita el temblor.
+  Gazebo une los links de juntas fijas (el pie con la tibia), pero conserva
+  estos ajustes en la colisión del pie.
+
+  Odometría de referencia: el plugin OdometryPublisher publica la pose REAL
+  del cuerpo en el mundo (odom → base_link). No es un sensor del robot real;
+  sirve para medir en la simulación cuánto avanzó (evidencia de E3 y E4).
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="foot_contact" params="prefix">
+    <gazebo reference="${prefix}_foot_link">
+      <mu1>1.0</mu1>
+      <mu2>1.0</mu2>
+      <kp>100000.0</kp>
+      <kd>100.0</kd>
+      <minDepth>0.0005</minDepth>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:macro name="hexapod_gazebo">
+    <xacro:foot_contact prefix="lf"/>
+    <xacro:foot_contact prefix="lm"/>
+    <xacro:foot_contact prefix="lr"/>
+    <xacro:foot_contact prefix="rf"/>
+    <xacro:foot_contact prefix="rm"/>
+    <xacro:foot_contact prefix="rr"/>
+
+    <gazebo>
+      <plugin filename="gz-sim-odometry-publisher-system"
+              name="gz::sim::systems::OdometryPublisher">
+        <odom_frame>odom</odom_frame>
+        <robot_base_frame>base_link</robot_base_frame>
+        <odom_topic>hexapod/odom</odom_topic>
+        <tf_topic>hexapod/odom_tf</tf_topic>
+        <odom_publish_frequency>50</odom_publish_frequency>
+        <dimensions>3</dimensions>
+      </plugin>
+    </gazebo>
+  </xacro:macro>
+
+</robot>

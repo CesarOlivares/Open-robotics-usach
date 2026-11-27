@@ -1,0 +1,45 @@
+# Controladores de ros2_control para el hexápodo (pauta P6).
+#
+# Lo lee el controller_manager que levanta gz_ros2_control dentro de Gazebo
+# (ver hexapod_description/urdf/ros2_control.xacro). El launch los activa
+# con el "spawner" de controller_manager.
+
+controller_manager:
+  ros__parameters:
+    # Lazo de control a 100 Hz: cada 10 ms lee estados, corre los
+    # controladores y escribe comandos.
+    update_rate: 100
+
+    # Publica /joint_states (posición y velocidad medidas de las 18
+    # articulaciones). robot_state_publisher lo usa para la TF.
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    # Las 18 articulaciones. Recibe en /legs_controller/commands un
+    # std_msgs/Float64MultiArray con 18 ángulos [rad], en el orden de
+    # "joints", y los copia a las interfaces de comando "position".
+    # Quien los calcula es gait_node (postura, marcha e IK).
+    legs_controller:
+      type: position_controllers/JointGroupPositionController
+
+legs_controller:
+  ros__parameters:
+    joints:
+      - lf_coxa_joint
+      - lf_femur_joint
+      - lf_tibia_joint
+      - lm_coxa_joint
+      - lm_femur_joint
+      - lm_tibia_joint
+      - lr_coxa_joint
+      - lr_femur_joint
+      - lr_tibia_joint
+      - rf_coxa_joint
+      - rf_femur_joint
+      - rf_tibia_joint
+      - rm_coxa_joint
+      - rm_femur_joint
+      - rm_tibia_joint
+      - rr_coxa_joint
+      - rr_femur_joint
+      - rr_tibia_joint

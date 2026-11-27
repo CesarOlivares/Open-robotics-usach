@@ -1,0 +1,22 @@
+# Parámetros de gait_node (postura y marcha).
+#
+# Distancias "radial": horizontal, del eje del FÉMUR al pie.
+# Distancias "height":  vertical, del eje de la coxa (centro del cuerpo) al
+#                       centro de la esfera del pie.
+gait_node:
+  ros__parameters:
+    rate: 50.0              # [Hz] publicación a /legs_controller/commands
+
+    # Postura de pie [provisorio, la revisa E8]. 70 mm cumple la cota
+    # estática d ≤ 88 mm del plan; con 90 mm el cuerpo queda a 100 mm del
+    # suelo y la batería a ~52 mm.
+    stand_radial: 0.070
+    stand_height: 0.090
+
+    # Patas recogidas: el cuerpo descansa sobre la batería y los pies
+    # quedan apenas sobre el suelo.
+    tuck_radial: 0.080       # 60 mm pediría doblar la tibia a −148° (límite −143°)
+    tuck_height: 0.030
+
+    tuck_time: 1.0          # [s] llevar las patas a la postura recogida
+    stand_time: 2.5         # [s] bajar los pies y levantar el cuerpo
