@@ -235,3 +235,109 @@ ros2 launch hexapod_bringup gazebo.launch.py                 # Gazebo + RViz
 python3 scripts/medir_postura.py --segundos 60               # en otra terminal
 ros2 control list_controllers
 ```
+
+---
+
+## E4 — Marcha trípode y teclado
+
+**Conceptos**
+
+- **Marcha trípode:** dos grupos de 3 patas que se alternan, siempre con un
+  triángulo apoyado. Grupo A = LF, RM, LR; grupo B = RF, LM, RR (medio ciclo
+  desfasado).
+- **Fase** φ ∈ [0, 1) por pata, avanza dt/T. Con fracción de apoyo β:
+  - apoyo (φ < β): el pie se mueve respecto del cuerpo al revés que el
+    cuerpo, −(v + ω ẑ × p)·dt. Eso empuja al robot;
+  - vuelo (φ ≥ β): con u = (φ − β)/(1 − β), el pie va desde donde despegó
+    hasta p0 + Δ/2 por un arco de altura h: p = p_despegue + u (p_destino −
+    p_despegue) + h sin(πu) ẑ.
+- **Vector de paso** (con giro): Δ = βT (v + ω ẑ × p0). Al girar, cada pata
+  da un paso distinto según su posición: perpendicular a su radio.
+- Con velocidad constante esto es **igual a las fórmulas cerradas del plan**
+  (apoyo p = p0 + (½ − φ/β)Δ; vuelo p = p0 + (u − ½)Δ + h sin(πu) ẑ). Se
+  calcula de forma incremental para que el pie no salte si la velocidad
+  cambia a mitad de paso. Un test lo comprueba.
+
+**Qué se hizo**
+
+| Archivo | Rol |
+|---|---|
+| `hexapod_control/gait.py` | Marcha trípode sin ROS: fases, trayectorias, vector de paso, límite de paso y rampa de velocidad |
+| `hexapod_control/gait_node.py` | Tras pararse, lee `/hexapod/cmd_vel` (Twist), corre la marcha y la IK de las 6 patas a 50 Hz. Sin comandos por 0,5 s, se detiene |
+| `hexapod_control/keyboard_teleop.py` | Teclado → Twist a 10 Hz: w/s adelante/atrás, a/d lateral, q/e giro, espacio frena |
+| `config/gait.yaml` | T = 1 s, β = 0,6, h = 30 mm, paso máx. 60 mm, rampas |
+| `scripts/medir_marcha.py` | Evidencia D11: pide 5 velocidades y mide la real |
+| `scripts/medir_torque_tripode.py` | Torque estático apoyado en 3 patas (para E8) |
+
+Detalles de diseño:
+
+- **Límite de paso:** si la velocidad pedida exige un paso de más de 60 mm,
+  v y ω se escalan juntos (misma dirección). Con β = 0,6 y T = 1 s, la
+  velocidad máxima es 0,10 m/s. El teclado tiene ese mismo tope (lo
+  comprueba un test).
+- **Rampa:** la velocidad cambia como máximo 0,4 m/s² y 2 rad/s². Sin ella,
+  invertir la marcha de golpe hacía saltar 2 cm el destino del pie en vuelo.
+- **Al soltar el mando** la marcha sigue hasta que todos los pies vuelven a
+  su posición neutra y ahí se detiene.
+- **Despegue y aterrizaje exactos:** el cambio de fase casi nunca cae justo
+  en un paso de 20 ms. El pie se ubica donde estaría exactamente en φ = β
+  (si no, el paso quedaba corto o largo una fracción de paso).
+
+**Ajustes en la simulación**
+
+| Prueba | Resultado | Decisión |
+|---|---|---|
+| β = 0,5 (trípode puro) | Camina, pero 22–26 % más lento de lo pedido; el cuerpo cae 5 mm en cada cambio de grupo | Con β = 0,5 un grupo despega en el mismo instante en que el otro aterriza; los servos se atrasan y el cuerpo cae |
+| Ganancia de posición de gz_ros2_control 0,5 (en vez de 0,1) | De pie bien, pero al caminar el robot se desploma | Se vuelve a 0,1 (por defecto) |
+| **β = 0,6** | Las 6 patas apoyan un 10 % del ciclo en cada cambio: cae 3 mm y el error baja a 9–15 % | **Se adopta.** Es lo que usan los hexápodos reales; sigue siendo trípode |
+
+**Evidencia**
+
+| Entregable | Comprobación | Resultado |
+|---|---|---|
+| D10 camina con teclado | `keyboard_teleop` + video (lo graba el usuario) | Avanza, retrocede, va de lado y gira en ambos sentidos (medido) |
+| D11 velocidad ≈ pedida | `scripts/medir_marcha.py`, 10 s simulados por prueba tras 2 s de arranque | ✅ ver tabla |
+| Marcha correcta sin ROS | `test_gait.py` (10 tests): siempre 3 patas apoyadas con β = 0,5, pies apoyados en el suelo, igual a las fórmulas del plan, sin saltos al cambiar la velocidad, vuelve a casa al soltar | ✅ |
+| Marcha alcanzable | `test_robot_model.py`: 8 combinaciones a velocidad máxima, 6 s cada una, sin salir de los límites articulares | ✅ |
+
+| Prueba | Pedido | Medido | Error | Altura mín. del cuerpo |
+|---|---|---|---|---|
+| Adelante | 0,080 m/s | 0,073 m/s | 8,9 % | 97,0 mm |
+| Atrás | 0,080 m/s | 0,073 m/s | 8,9 % | 96,9 mm |
+| Lateral izquierda | 0,060 m/s | 0,053 m/s | 12,2 % | 96,8 mm |
+| Giro izquierda | 0,400 rad/s | 0,342 rad/s | 14,5 % | 96,8 mm |
+| Giro derecha | 0,400 rad/s | 0,342 rad/s | 14,4 % | 96,8 mm |
+
+El robot siempre va un poco más lento de lo pedido: los servos simulados se
+atrasan respecto de la trayectoria y el paso real queda algo más corto.
+
+**El torque caminando no es la carga real (importante para E8)**
+
+Caminando, `effort` marca ~1,07 N·m en el fémur durante todo el apoyo
+(saturado), con un error de posición de apenas 0,02 rad. No es el peso: en
+modo posición gz_ros2_control **impone una velocidad** a cada junta usando
+hasta todo el torque disponible. Las 3 patas apoyadas tienen los pies fijos
+por la fricción. Si sus trayectorias no calzan exactamente con el movimiento
+real del cuerpo, se empujan entre sí al máximo. Un servo real cede un poco
+(su fuerza crece con el error), así que este valor sobrestima la carga.
+
+Lo que sí es confiable es el **torque estático en 3 patas**
+(`medir_torque_tripode.py`), que coincide con el cálculo a mano:
+
+| | Cálculo | Gazebo |
+|---|---|---|
+| Carga por pata de apoyo | 18,4 N / 3 = 6,13 N | — |
+| Fémur, pata apoyada | 6,13 N × 0,070 m − peso propio de la pata (0,054) = 0,375 N·m | **0,375 N·m** |
+| Fémur, pata levantada | sostiene su propia pata: 0,043 N·m | 0,042 N·m |
+| Tibia, pata apoyada | pie casi bajo la rodilla | 0,025 N·m |
+
+El fémur apoyado usa el 35 % del torque de bloqueo (1,08 N·m) a 6 V. Ese es
+el dato de partida del estudio de dimensiones.
+
+**Cómo verlo**
+
+```bash
+ros2 launch hexapod_bringup gazebo.launch.py
+ros2 run hexapod_control keyboard_teleop          # en otra terminal
+python3 scripts/medir_marcha.py                   # o medir la velocidad
+```

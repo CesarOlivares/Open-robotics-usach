@@ -4,6 +4,18 @@
 # (ver hexapod_description/urdf/ros2_control.xacro). El launch los activa
 # con el "spawner" de controller_manager.
 
+# Nodo del plugin gz_ros2_control (el "hardware" simulado).
+# En modo posición manda a cada junta una velocidad
+#     v = −K · (q − q_objetivo) · update_rate
+# y el motor de física la limita con el torque y la velocidad del URDF.
+# Con la K por defecto (0,1) la junta se atrasa ~0,1 s: a 1 paso por segundo
+# eso acorta el paso un 15 % y el robot camina más lento de lo pedido. Un
+# servo de hobby tiene un control interno rígido que solo limita su
+# velocidad máxima; K = 0,5 (alcanza el objetivo en ~20 ms) se le parece más.
+gz_ros_control:
+  ros__parameters:
+    position_proportional_gain: 0.1
+
 controller_manager:
   ros__parameters:
     # Lazo de control a 100 Hz: cada 10 ms lee estados, corre los

@@ -46,6 +46,7 @@ setup(
     entry_points={
         'console_scripts': [
             'gait_node = hexapod_control.gait_node:main',
+            'keyboard_teleop = hexapod_control.keyboard_teleop:main',
         ],
     },
 )

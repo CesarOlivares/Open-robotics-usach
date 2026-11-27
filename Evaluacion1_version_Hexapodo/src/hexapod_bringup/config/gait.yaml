@@ -20,3 +20,17 @@ gait_node:
 
     tuck_time: 1.0          # [s] llevar las patas a la postura recogida
     stand_time: 2.5         # [s] bajar los pies y levantar el cuerpo
+
+    # Marcha trípode (hexapod_control/gait.py)
+    period: 1.0             # [s] T, un ciclo completo (apoyo + vuelo)
+    # β: fracción del ciclo en apoyo. Con 0,5 un grupo despega en el mismo
+    # instante en que el otro aterriza; los servos se atrasan y el cuerpo cae
+    # 5 mm en cada cambio (velocidad real 22 % bajo la pedida). Con 0,6 las
+    # 6 patas apoyan un 10 % del ciclo en cada cambio: cae 3 mm y el error
+    # baja a ~9 %. Sigue siendo marcha trípode (los grupos se alternan).
+    duty: 0.6
+    step_height: 0.03       # [m] h, altura del arco de vuelo del pie
+    max_step: 0.06          # [m] |Δ| máximo; v máx = max_step / (β T) = 0,10 m/s
+    max_accel: 0.4          # [m/s²] rampa de la velocidad lineal
+    max_alpha: 2.0          # [rad/s²] rampa de la velocidad de giro
+    cmd_timeout: 0.5        # [s] sin /hexapod/cmd_vel → se detiene

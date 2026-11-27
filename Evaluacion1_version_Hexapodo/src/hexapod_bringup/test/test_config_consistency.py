@@ -86,3 +86,10 @@ def test_posturas_de_gait_yaml_alcanzables(urdf_xml):
     for radial, height in ((p['stand_radial'], p['stand_height']),
                            (p['tuck_radial'], p['tuck_height'])):
         model.joint_angles(model.neutral_feet(l1 + radial, height))  # lanza si no
+
+
+def test_tope_del_teclado_igual_al_de_la_marcha():
+    """La velocidad máxima del teclado es la que la marcha puede dar: max_step / (β T)."""
+    from hexapod_control.keyboard_teleop import V_MAX
+    p = load_yaml('gait.yaml')['gait_node']['ros__parameters']
+    assert V_MAX == pytest.approx(p['max_step'] / (p['duty'] * p['period']))

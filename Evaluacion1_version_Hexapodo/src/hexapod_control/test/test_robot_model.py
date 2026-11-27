@@ -64,3 +64,18 @@ def test_posturas_de_gait_node(model, radial, height):
     for i, leg in enumerate(model.legs):
         p = leg.leg_to_body(fk(leg.geom, angles[3 * i:3 * i + 3]))
         assert p == pytest.approx(feet[i], abs=1e-9)
+
+
+@pytest.mark.parametrize('v, wz', [((0.12, 0.0), 0.0), ((-0.12, 0.0), 0.0),
+                                   ((0.0, 0.12), 0.0), ((0.0, -0.12), 0.0),
+                                   ((0.0, 0.0), 0.5), ((0.0, 0.0), -0.5),
+                                   ((0.1, 0.06), 0.4), ((1.0, 1.0), 2.0)])
+def test_marcha_siempre_alcanzable(model, v, wz):
+    """A velocidad máxima en cualquier dirección, la IK nunca sale de los límites."""
+    from hexapod_control.gait import TripodGait
+    gait = TripodGait(LEG_NAMES, model.neutral_feet(0.045 + 0.070, 0.090))
+    for _ in range(300):
+        model.joint_angles(gait.update(0.02, v, wz))  # lanza UnreachableError si no
+    for _ in range(100):
+        model.joint_angles(gait.update(0.02, (0.0, 0.0), 0.0))
+    assert gait.at_home()
