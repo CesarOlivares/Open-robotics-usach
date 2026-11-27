@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+<!--
+  Cuerpo del hexápodo: dos placas hexagonales regulares y horizontales,
+  separadas por los servos de las coxas.
+
+  Marcos (REP-103):
+    base_link  centro geométrico del cuerpo, a media altura entre placas.
+               x hacia adelante, y a la izquierda, z hacia arriba.
+               Es la raíz del árbol y NO tiene masa (ver nota KDL abajo).
+    body_link  placas + cableado. Unido a base_link por una junta fija.
+
+  Geometría del hexágono (radio de placa Rp = centro → vértice):
+    lado s = Rp,  apotema a = Rp·√3/2 (centro → lado).
+    Los vértices quedan a ±30°, ±90°, ±150°: el frente (+x) mira a un lado.
+  URDF no tiene un prisma hexagonal, así que se arma con 3 cajas de
+  2a × s girando 0°, 60° y 120°. Cada caja va de un lado al lado opuesto y
+  sus esquinas son justo los vértices: la unión es el hexágono exacto.
+
+  Nota KDL: robot_state_publisher usa KDL, que no admite masa en el link
+  raíz. Por eso base_link queda sin <inertial> y la masa va en body_link.
+  Gazebo une los links de juntas fijas, así que en la simulación es un
+  solo cuerpo rígido con la masa total.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:property name="plate_radius" value="${body_radius + body_plate_margin}"/>
+  <xacro:property name="plate_side" value="${plate_radius}"/>
+  <xacro:property name="plate_apothem" value="${plate_radius * sqrt(3) / 2}"/>
+  <!-- Altura de la cara superior de la placa superior (útil para montar cosas encima) -->
+  <xacro:property name="plate_top_z" value="${body_plate_gap/2 + body_plate_thick}"/>
+  <xacro:property name="plate_bottom_z" value="${-plate_top_z}"/>
+
+  <!-- Un rectángulo del hexágono: geometría y pose (visual o collision) -->
+  <xacro:macro name="hex_strip" params="tag yaw z h">
+    <xacro:if value="${tag == 'visual'}">
+      <visual>
+        <origin xyz="0 0 ${z}" rpy="0 0 ${yaw}"/>
+        <geometry><box size="${2*plate_apothem} ${plate_side} ${h}"/></geometry>
+        <material name="hexapod_navy"/>
+      </visual>
+    </xacro:if>
+    <xacro:if value="${tag == 'collision'}">
+      <collision>
+        <origin xyz="0 0 ${z}" rpy="0 0 ${yaw}"/>
+        <geometry><box size="${2*plate_apothem} ${plate_side} ${h}"/></geometry>
+      </collision>
+    </xacro:if>
+  </xacro:macro>
+
+  <!-- Prisma hexagonal = 3 rectángulos girados 60° entre sí -->
+  <xacro:macro name="hex_prism" params="tag z h">
+    <xacro:hex_strip tag="${tag}" yaw="0" z="${z}" h="${h}"/>
+    <xacro:hex_strip tag="${tag}" yaw="${PI/3}" z="${z}" h="${h}"/>
+    <xacro:hex_strip tag="${tag}" yaw="${2*PI/3}" z="${z}" h="${h}"/>
+  </xacro:macro>
+
+  <xacro:macro name="hexapod_body">
+
+    <link name="base_link"/>
+
+    <joint name="body_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="body_link"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <link name="body_link">
+      <!-- Placa superior e inferior -->
+      <xacro:hex_prism tag="visual" z="${body_plate_gap/2 + body_plate_thick/2}" h="${body_plate_thick}"/>
+      <xacro:hex_prism tag="visual" z="${-body_plate_gap/2 - body_plate_thick/2}" h="${body_plate_thick}"/>
+      <!-- Colisión: un solo prisma del alto total (placas + espacio entre ellas) -->
+      <xacro:hex_prism tag="collision" z="0" h="${body_plate_gap + 2*body_plate_thick}"/>
+      <!-- Placas y cableado: se aproximan como un cilindro del radio de la placa -->
+      <xacro:cylinder_inertial m="${body_structure_mass + wiring_mass}" r="${plate_radius}"
+                               h="${body_plate_gap + 2*body_plate_thick}">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:cylinder_inertial>
+    </link>
+
+  </xacro:macro>
+
+  <!--
+    Servo de una coxa, fijo al cuerpo entre las placas.
+    Eje de salida vertical, justo en el vértice (donde nace la pata).
+    El cuerpo del servo se extiende hacia el centro: su centro queda a
+    (servo_x/2 − servo_shaft_offset) del eje, en dirección radial hacia adentro.
+  -->
+  <xacro:macro name="coxa_servo" params="prefix mount_angle">
+    <xacro:property name="rc" value="${body_radius - (servo_x/2 - servo_shaft_offset)}"/>
+    <joint name="${prefix}_coxa_servo_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="${prefix}_coxa_servo_link"/>
+      <origin xyz="${rc*cos(mount_angle)} ${rc*sin(mount_angle)} 0" rpy="0 0 ${mount_angle}"/>
+    </joint>
+    <link name="${prefix}_coxa_servo_link">
+      <visual>
+        <geometry><box size="${servo_x} ${servo_y} ${servo_z}"/></geometry>
+        <material name="hexapod_dark"/>
+      </visual>
+      <xacro:box_inertial m="${servo_mass}" x="${servo_x}" y="${servo_y}" z="${servo_z}">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:box_inertial>
+    </link>
+  </xacro:macro>
+
+</robot>

@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!--
+  Hexápodo completo (pautas P3, P4, P5 y P8).
+
+  Árbol cinemático:
+    base_link (raíz, sin masa; en Gazebo es la base flotante)
+     ├─ body_link                     placas + cableado
+     ├─ battery / raspberry / pca_1 / pca_2
+     ├─ imu_link, camera_link ─ camera_optical_link
+     └─ 6 × { coxa_servo_link, coxa ─ fémur ─ tibia ─ pie }   (18 articulaciones)
+
+  Patas, en los vértices del hexágono (ángulo desde +x, antihorario):
+       lf  +30°   (izquierda adelante)     rf  −30°   (derecha adelante)
+       lm  +90°   (izquierda medio)        rm  −90°   (derecha medio)
+       lr +150°   (izquierda atrás)        rr −150°   (derecha atrás)
+
+  Ver:  ros2 launch hexapod_description display.launch.py
+-->
+<robot name="hexapod" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find hexapod_description)/urdf/hexapod_params.xacro"/>
+  <xacro:include filename="$(find hexapod_description)/urdf/materials.xacro"/>
+  <xacro:include filename="$(find hexapod_description)/urdf/macros/inertial.xacro"/>
+  <xacro:include filename="$(find hexapod_description)/urdf/body.xacro"/>
+  <xacro:include filename="$(find hexapod_description)/urdf/components.xacro"/>
+  <xacro:include filename="$(find hexapod_description)/urdf/sensors.xacro"/>
+  <xacro:include filename="$(find hexapod_description)/urdf/leg.xacro"/>
+
+  <xacro:hexapod_body/>
+  <xacro:hexapod_components/>
+  <xacro:hexapod_sensors/>
+
+  <!-- Una pata completa: servo de la coxa en el cuerpo + cadena de 3 articulaciones -->
+  <xacro:macro name="mounted_leg" params="prefix deg">
+    <xacro:coxa_servo prefix="${prefix}" mount_angle="${deg*PI/180}"/>
+    <xacro:hexapod_leg prefix="${prefix}" parent="base_link"
+                       mount_angle="${deg*PI/180}" radius="${body_radius}"/>
+  </xacro:macro>
+
+  <xacro:mounted_leg prefix="lf" deg="30"/>
+  <xacro:mounted_leg prefix="lm" deg="90"/>
+  <xacro:mounted_leg prefix="lr" deg="150"/>
+  <xacro:mounted_leg prefix="rf" deg="-30"/>
+  <xacro:mounted_leg prefix="rm" deg="-90"/>
+  <xacro:mounted_leg prefix="rr" deg="-150"/>
+
+</robot>

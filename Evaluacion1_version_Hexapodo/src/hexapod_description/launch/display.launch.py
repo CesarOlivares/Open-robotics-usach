@@ -26,7 +26,8 @@ Nodos:
     rviz2                      dibuja RobotModel y TF.
 
 Uso:
-    ros2 launch hexapod_description display.launch.py model:=leg_test
+    ros2 launch hexapod_description display.launch.py                  (hexápodo)
+    ros2 launch hexapod_description display.launch.py model:=leg_test  (una pata)
     ros2 launch hexapod_description display.launch.py use_gui:=false
 """
 
@@ -59,7 +60,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument(
-            'model', default_value='leg_test',
+            'model', default_value='hexapod',
             description='leg_test: una pata sobre un soporte (E1); hexapod: robot completo'),
         DeclareLaunchArgument(
             'use_gui', default_value='true',

@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<!--
+  Sensores: marcos y masas (pauta P8). Los plugins de Gazebo que los hacen
+  publicar datos se agregan en E5 (sensors_gazebo.xacro).
+
+    imu_link              BNO085 en el centro del cuerpo, pegada bajo la
+                          placa superior. En el centro mide la orientación
+                          del cuerpo sin aceleraciones extra por giros.
+    camera_link           Pi Camera Module 3 en el lado frontal, mirando a +x
+                          e inclinada ~10° hacia el suelo.
+    camera_optical_link   mismo punto, con la convención óptica de ROS
+                          (z hacia adelante, x a la derecha, y hacia abajo),
+                          que es la que usan las imágenes y camera_info.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="hexapod_sensors">
+
+    <joint name="imu_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="imu_link"/>
+      <origin xyz="0 0 ${body_plate_gap/2 - imu_z/2}" rpy="0 0 0"/>
+    </joint>
+    <link name="imu_link">
+      <visual>
+        <geometry><box size="${imu_x} ${imu_y} ${imu_z}"/></geometry>
+        <material name="hexapod_orange"/>
+      </visual>
+      <xacro:box_inertial m="${imu_mass}" x="${imu_x}" y="${imu_y}" z="${imu_z}">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:box_inertial>
+    </link>
+
+    <joint name="camera_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="camera_link"/>
+      <origin xyz="${plate_apothem - camera_x/2} 0 ${plate_top_z + camera_z/2}"
+              rpy="0 ${camera_pitch} 0"/>
+    </joint>
+    <link name="camera_link">
+      <visual>
+        <geometry><box size="${camera_x} ${camera_y} ${camera_z}"/></geometry>
+        <material name="hexapod_dark"/>
+      </visual>
+      <collision>
+        <geometry><box size="${camera_x} ${camera_y} ${camera_z}"/></geometry>
+      </collision>
+      <xacro:box_inertial m="${camera_mass}" x="${camera_x}" y="${camera_y}" z="${camera_z}">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:box_inertial>
+    </link>
+
+    <joint name="camera_optical_joint" type="fixed">
+      <parent link="camera_link"/>
+      <child link="camera_optical_link"/>
+      <origin xyz="0 0 0" rpy="${-PI/2} 0 ${-PI/2}"/>
+    </joint>
+    <link name="camera_optical_link"/>
+
+  </xacro:macro>
+
+</robot>

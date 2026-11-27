@@ -61,7 +61,14 @@
   <xacro:property name="tibia_upper" value="0.6"/>
 
   <!-- ===================== Cuerpo (hexágono regular) ===================== -->
+  <!-- Las patas van en los 6 vértices (±30°, ±90°, ±150°); el frente del
+       robot (+x) mira a un LADO plano, no a un vértice. -->
   <xacro:property name="body_radius" value="0.100"/>   <!-- R: centro → eje de coxa [provisorio] -->
+  <!-- Las placas sobresalen del eje de la coxa para sujetar el servo y su
+       adaptador coaxial: radio de la placa (centro → vértice) [provisorio] -->
+  <xacro:property name="body_plate_margin" value="0.015"/>
+  <!-- Eje de salida del MG996R: a ~10 mm de un extremo del cuerpo [hoja, aprox.] -->
+  <xacro:property name="servo_shaft_offset" value="0.010"/>
   <xacro:property name="body_plate_thick" value="0.003"/>
   <xacro:property name="body_plate_gap"   value="0.045"/> <!-- entre placa inferior y superior -->
   <xacro:property name="body_structure_mass" value="0.200"/> <!-- [hipótesis] placas -->
@@ -80,5 +87,18 @@
   <xacro:property name="pca_y"          value="0.025"/>
   <xacro:property name="pca_z"          value="0.015"/>
   <xacro:property name="wiring_mass"    value="0.100"/>  <!-- [hipótesis] cables y reguladores -->
+
+  <!-- ===================== Sensores (por comprar) ===================== -->
+  <!-- IMU BNO085 (placa tipo Adafruit 25,4 × 17,8 mm) en el centro del cuerpo -->
+  <xacro:property name="imu_mass" value="0.003"/>   <!-- [hipótesis] -->
+  <xacro:property name="imu_x"    value="0.0254"/>  <!-- [hoja] -->
+  <xacro:property name="imu_y"    value="0.0178"/>
+  <xacro:property name="imu_z"    value="0.004"/>
+  <!-- Raspberry Pi Camera Module 3 (25 × 24 × 11,5 mm) en el lado frontal -->
+  <xacro:property name="camera_mass"  value="0.004"/>   <!-- [hipótesis] -->
+  <xacro:property name="camera_x"     value="0.0115"/>  <!-- [hoja] profundidad -->
+  <xacro:property name="camera_y"     value="0.025"/>
+  <xacro:property name="camera_z"     value="0.024"/>
+  <xacro:property name="camera_pitch" value="0.17"/>    <!-- ~10° hacia el suelo [hipótesis] -->
 
 </robot>
