@@ -1,0 +1,824 @@
+% Plan de trabajo y ataque — Hexápodo (versión paralela de la Evaluación 1)
+% Compilar con XeLaTeX (dos pasadas):  xelatex plan_ataque.tex
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[spanish,es-tabla]{babel}
+\usepackage{fontspec}
+\setmainfont{Lato}
+\usepackage{unicode-math}
+\setmathfont{TeX Gyre DejaVu Math}
+\usepackage[a4paper,margin=2.2cm,top=2.6cm,bottom=2.4cm,headheight=28pt]{geometry}
+\usepackage{xcolor,graphicx,booktabs,tabularx,array,enumitem,amsmath,fancyhdr,lastpage,titlesec,multirow,colortbl}
+\usepackage[most]{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,calc,fit,shapes.geometric}
+\usepackage[hidelinks]{hyperref}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{needspace}
+\setcounter{tocdepth}{2}
+
+% ---------------- Paleta ----------------
+\definecolor{navy}{HTML}{002F6C}      % USACH 294
+\definecolor{naranjo}{HTML}{EA7600}   % USACH 716
+\definecolor{gris}{HTML}{5F6B7A}
+\definecolor{fondo}{HTML}{FFFFFF}
+% Color = tipo de trabajo
+\definecolor{cModelo}{HTML}{1F5FAD}
+\definecolor{cControl}{HTML}{4B3B9A}
+\definecolor{cSim}{HTML}{2E7D32}
+\definecolor{cSens}{HTML}{00838F}
+\definecolor{cMicro}{HTML}{EA7600}
+\definecolor{cInteg}{HTML}{A6790A}
+\definecolor{cEstudio}{HTML}{7B4A2A}
+\definecolor{cEntrega}{HTML}{5F6B7A}
+% Semáforo
+\definecolor{sRojo}{HTML}{C62828}
+\definecolor{sAmbar}{HTML}{E69500}
+\definecolor{sVerde}{HTML}{43A047}
+
+\captionsetup{font=small,labelfont={bf,color=navy}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.45em}
+\renewcommand{\arraystretch}{1.25}
+\setlist{itemsep=0.15em,topsep=0.3em}
+
+% Etiqueta de color (pill)
+\newcommand{\pill}[2]{{\setlength{\fboxsep}{1.6pt}\colorbox{#1}{\textcolor{white}{\footnotesize\bfseries\,#2\,}}}}
+\newcommand{\Ez}{\pill{cModelo}{E0}}
+\newcommand{\Eu}{\pill{cControl}{E1}}
+\newcommand{\Ed}{\pill{cModelo}{E2}}
+\newcommand{\Et}{\pill{cSim}{E3}}
+\newcommand{\Ec}{\pill{cControl}{E4}}
+\newcommand{\Eci}{\pill{cSens}{E5}}
+\newcommand{\Es}{\pill{cMicro}{E6}}
+\newcommand{\Esi}{\pill{cInteg}{E7}}
+\newcommand{\Eo}{\pill{cEstudio}{E8}}
+\newcommand{\En}{\pill{cEntrega}{E9}}
+
+% Recuadro destacado: mismo fondo de la hoja, barra lateral y título en el color de acento
+\newtcolorbox{destacado}[2][naranjo]{enhanced,breakable,colback=fondo,colframe=fondo,boxrule=0pt,
+  borderline west={3pt}{0pt}{#1},left=8pt,right=4pt,top=2pt,bottom=2pt,
+  title={#2},coltitle=#1,colbacktitle=fondo,fonttitle=\bfseries,attach title to upper={\par\smallskip}}
+
+% Títulos
+\titleformat{\section}{\color{navy}\Large\bfseries}{\thesection}{0.6em}{}[\vspace{-0.3em}{\color{naranjo}\rule{\linewidth}{1.2pt}}]
+\titleformat{\subsection}{\color{navy}\large\bfseries}{\thesubsection}{0.5em}{}
+\titleformat{\subsubsection}{\color{gris}\normalsize\bfseries}{}{0em}{}
+\titlespacing*{\section}{0pt}{1.2em}{0.6em}
+
+% Encabezado y pie
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\color{navy}\small\bfseries Hexápodo --- Plan de trabajo y ataque}
+\fancyhead[R]{\includegraphics[height=20pt]{logo_small.png}}
+\fancyfoot[L]{\color{gris}\footnotesize Open Robotics · USACH · 2.º semestre 2026}
+\fancyfoot[R]{\color{gris}\footnotesize Página \thepage\ de \pageref{LastPage}}
+\renewcommand{\headrulewidth}{0.8pt}
+\renewcommand{\headrule}{{\color{navy}\hrule height \headrulewidth}}
+
+% Ficha de etapa
+\newcommand{\ficha}[4]{% color, tipo, cuándo, pauta
+  \begin{tabularx}{\linewidth}{@{}l Y@{}}
+  \textbf{Tipo:} & \pill{#1}{#2}\\
+  \textbf{Cuándo:} & #3\\
+  \textbf{Puntos de la pauta:} & #4\\
+  \textbf{Responsable:} & César (revisa, estudia y decide) · Apoyo: Claude (código)\\
+  \end{tabularx}\par}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\begin{document}
+
+% ====================== PORTADA ======================
+\begin{titlepage}
+\newgeometry{margin=0pt}
+\begin{tikzpicture}[remember picture,overlay]
+  \fill[navy] (current page.north west) rectangle ([yshift=-11cm]current page.north east);
+  \fill[naranjo] ([yshift=-11cm]current page.north west) rectangle ([yshift=-11.35cm]current page.north east);
+  \node[anchor=north west] at ([xshift=2cm,yshift=-1.6cm]current page.north west) {\colorbox{white}{\includegraphics[height=2.6cm]{usach_logo.jpg}}};
+  \node[anchor=west,text=white,font=\fontsize{30}{34}\selectfont\bfseries,align=left] at ([xshift=2cm,yshift=-6.4cm]current page.north west) {Hexápodo con ROS\,2};
+  \node[anchor=west,text=white,font=\Large,align=left] at ([xshift=2cm,yshift=-7.9cm]current page.north west) {Plan de trabajo y ataque del proyecto};
+  \node[anchor=west,text=naranjo!40,font=\large,align=left] at ([xshift=2cm,yshift=-9cm]current page.north west) {Versión paralela de la Evaluación 1 · Estudio de dimensiones};
+  \node[anchor=north west,font=\large,align=left,text=navy] at ([xshift=2cm,yshift=-13cm]current page.north west) {%
+    \begin{tabular}{@{}ll@{}}
+    \textbf{Asignatura} & Open Robotics --- 2.º semestre 2026\\[0.3em]
+    \textbf{Estudiante} & Cesar Olivares Lavalovich\\[0.3em]
+    \textbf{Profesor} & José Pascal\\[0.3em]
+    \textbf{Fecha} & 26 de noviembre de 2026\\[0.3em]
+    \textbf{Versión} & v1\\
+    \end{tabular}};
+  \node[anchor=south west,font=\small,text=gris,align=left,text width=17cm] at ([xshift=2cm,yshift=2cm]current page.south west) {%
+    Universidad de Santiago de Chile. Documento de trabajo personal: guía para ejecutar, estudiar y presentar el proyecto.
+    La entrega oficial de la Evaluación 1 es el brazo Octavius; este proyecto cumple la misma pauta con un hexápodo.};
+\end{tikzpicture}
+\restoregeometry
+\end{titlepage}
+
+\tableofcontents
+\clearpage
+
+% ====================== 1. META ======================
+\Needspace{14\baselineskip}
+\section{Meta y alcance}
+
+\begin{destacado}{Meta}
+De aquí al \textbf{domingo 29 de noviembre de 2026} (\emph{fecha supuesta, por confirmar}), tener un hexápodo simulado en ROS\,2 Jazzy que cumpla \textbf{todos los puntos de la pauta}. Además, tener las \textbf{cotas ideales} de patas y cuerpo, calculadas a partir de los componentes reales, para diseñar y maquinar después las piezas.
+\end{destacado}
+
+\textbf{Dentro del alcance}
+\begin{itemize}
+  \item Todo lo que pide la pauta, en simulación:
+  \begin{itemize}
+    \item workspace y paquetes;
+    \item URDF/XACRO;
+    \item RViz y Gazebo;
+    \item dos sensores;
+    \item \texttt{ros2\_control} con teclado;
+    \item micro-ROS;
+    \item launch;
+    \item presentación, tutorial y \texttt{.zip}.
+  \end{itemize}
+  \item Modelo con las masas y los datos de hoja de los componentes reales: 18 MG996R, Raspberry Pi 4, 2 PCA9685, LiPo 3S 5200 mAh, IMU y cámara.
+  \item Estudio de dimensiones: largos de coxa, fémur y tibia, radio del hexágono y layout de los componentes.
+\end{itemize}
+
+\textbf{Fuera del alcance}
+\begin{itemize}
+  \item Construir, cablear o poner en marcha el robot real.
+  \item Las piezas CAD hechas a ojo (\texttt{base\_hexapodo}, \texttt{BICEP}, \texttt{PATA\_1}, \texttt{Tapa superior}). Se descartan y se rediseñan con los resultados del estudio.
+\end{itemize}
+
+\begin{destacado}[sRojo]{Aviso: punto 9 de la pauta (micro-ROS)}
+La pauta pide conectar una ESP32 por micro-ROS y mover articulaciones con ella. La ESP32 todavía no está comprada. Esta semana se deja listo todo lo demás:
+\begin{itemize}
+  \item el paquete;
+  \item el tópico;
+  \item el nodo que convierte el joystick en movimiento;
+  \item el firmware compilado.
+\end{itemize}
+Sin la ESP32, el robot se mueve publicando el tópico a mano. \textbf{El punto solo queda cerrado al conectar la placa real.} Si no se compra antes de presentar, hay que decirlo en la presentación.
+\end{destacado}
+
+% ====================== 2. OBJETIVOS ======================
+\Needspace{14\baselineskip}
+\section{Objetivos}
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\linewidth}{@{}l l Y@{}}
+\toprule
+\textbf{Objetivo} & \textbf{Fecha objetivo} & \textbf{Descripción del objetivo}\\
+\midrule
+\pill{cModelo}{O1} Modelo en RViz & \textbf{vie 27 nov} & URDF/XACRO del hexápodo (18 articulaciones, componentes, sensores) visible en RViz con 18 sliders, RobotModel y TF. Pauta 1--5.\\
+\pill{cSim}{O2} Caminar en Gazebo & sáb 28 nov & Se sostiene de pie en Gazebo y camina con el teclado mediante \texttt{ros2\_control}. Pauta 6 y 8.\\
+\pill{cSens}{O3} Sensores, launch y micro-ROS & sáb 28 nov & IMU y cámara publicando y visibles en RViz. Un launch levanta todo. Paquete micro-ROS listo para la ESP32. Pauta 7, 9 (parcial), 10 y 11.\\
+\pill{cEstudio}{O4} Cotas ideales & dom 29 nov & Largos de patas, radio del cuerpo y layout que cumplen torque, alcance, estabilidad y sin choques. Hoja de especificación para maquinar.\\
+\pill{cEntrega}{O5} Entrega & dom 29 nov & Presentación (PDF + editable), tutorial (PDF + editable) y \texttt{.zip} con el nombre pedido. Pauta 12--14.\\
+\bottomrule
+\end{tabularx}
+\caption{Objetivos de la semana. Intensidad del color: lo que cierra antes va más intenso en el cronograma (sección~\ref{sec:cronograma}).}
+\end{table}
+
+% ====================== 3. PAUTA ======================
+\Needspace{14\baselineskip}
+\section{Trazabilidad con la pauta}
+
+La pauta es la regla del proyecto: ningún cambio puede dejar uno de estos puntos sin cumplir. Los puntos se numeran P1--P14.
+
+\begin{table}[H]
+\centering\small
+\begin{tabularx}{\linewidth}{@{}l Y l Y@{}}
+\toprule
+\textbf{Punto} & \textbf{Qué pide} & \textbf{Etapa} & \textbf{Evidencia}\\
+\midrule
+P1 & Paquete con sus directorios & \Ez & \texttt{colcon build} sin errores\\
+P2 & Robot articulado en URDF/XACRO & \Ed & \texttt{check\_urdf} OK, árbol con \texttt{urdf\_to\_graphviz}\\
+P3 & Modelo en RViz & \Ed & Captura de RViz\\
+P4 & \texttt{joint\_state\_publisher} & \Ed & 18 sliders mueven las patas\\
+P5 & Percepción en RViz: RobotModel y TF & \Ed\ \Eci & Captura con RobotModel, TF, imagen e IMU\\
+P6 & Modelo en Gazebo & \Et & De pie $\geq$ 60 s sin hundirse\\
+P7 & $\geq$ 2 plugins de sensores & \Eci & \texttt{ros2 topic hz} de IMU y cámara\\
+P8 & \texttt{ros2\_control} + teclado & \Et\ \Ec & Camina y gira con teclas\\
+P9 & micro-ROS & \Es & Tópico a mano esta semana; ESP32 real al comprarla\\
+P10 & Launchfile & \Esi & Un comando levanta todo\\
+P11 & Estructura de carpetas & \Ez\ \Esi & Revisión del árbol del repositorio\\
+P12 & Presentación PDF + editable, $\leq$ 15 min & \En & Checklist de formato (sección~\ref{sec:entrega})\\
+P13 & Tutorial PDF + editable & \En & \texttt{DOCUMENTACION.md} $\rightarrow$ \texttt{.docx} + \texttt{.pdf}\\
+P14 & \texttt{.zip} \texttt{nombre1\_apellido1\_año\_semestre} & \En & Descomprimir en carpeta limpia y compilar\\
+\bottomrule
+\end{tabularx}
+\caption{Puntos de la pauta, etapa que los cumple y cómo se comprueba.}
+\end{table}
+
+% ====================== 4. DATOS ======================
+\Needspace{14\baselineskip}
+\section{Datos del robot}
+
+\subsection{Componentes y masas}
+
+Lo medido o sacado de una hoja de datos es un \textbf{hecho}. Lo marcado como \emph{hipótesis} es una estimación propia, y el estudio de dimensiones la revisa.
+
+\begin{table}[H]
+\centering\small
+\begin{tabularx}{\linewidth}{@{}l r Y l@{}}
+\toprule
+\textbf{Componente} & \textbf{Masa} & \textbf{Datos usados} & \textbf{Origen}\\
+\midrule
+18 × MG996R (eje coaxial) & 18 × 55 g & Cuerpo 40,7 × 19,7 × 42,9 mm. Bloqueo 1,08 N·m (6 V). 0,14 s/60° (6 V) & Pesado · hoja\\
+Adaptadores coaxiales A/B & --- & A: 49 × 69 × 20 mm; B: 40 × 49 × 20 mm & STEP del repositorio\\
+LiPo 3S 5200 mAh 60C & 271 g & 11,1 V nominal; medidas por confirmar & Pesada\\
+Raspberry Pi 4 & 86 g & 85 × 56 mm & Pesada · hoja\\
+2 × PCA9685 & 2 × 9 g & 62 × 25 mm; 16 canales c/u & Pesado · STEP\\
+IMU BNO085 (por comprar) & 3 g & Orientación + aceleración + giro & \emph{Hipótesis}\\
+Cámara Pi Camera Module 3 & 4 g & IMX708, campo de visión horizontal 66° & Hoja\\
+Estructura impresa & 400 g & Placas del cuerpo y piezas de patas & \emph{Hipótesis}\\
+Cables y reguladores & 100 g & --- & \emph{Hipótesis}\\
+\midrule
+\textbf{Total} & \textbf{$\approx$ 1,87 kg} & Peso $W \approx 18{,}4$ N & \\
+\bottomrule
+\end{tabularx}
+\caption{Componentes del robot y datos que entran al modelo.}
+\end{table}
+
+\subsection{Primera cota: cuánto puede alejarse el pie}
+
+Con la marcha trípode, 3 patas sostienen todo el peso. Cada una recibe una fuerza vertical:
+\begin{equation}
+F = \frac{m\,g}{3} = \frac{1{,}87 \cdot 9{,}81}{3} \approx 6{,}1\ \text{N}
+\end{equation}
+El servo más cargado es el del fémur. Su torque es esa fuerza por la distancia horizontal $d$ entre su eje y el pie. Para dejar margen, se le exige como máximo la mitad del torque de bloqueo (factor de seguridad 2):
+\begin{equation}
+F\,d \;\leq\; \tau_d = \frac{\tau_{\text{bloqueo}}}{2} = \frac{1{,}08}{2} = 0{,}54\ \text{N·m}
+\quad\Rightarrow\quad d \leq 8{,}8\ \text{cm}\ \ (7{,}5\ \text{cm a 4,8 V})
+\end{equation}
+
+\begin{destacado}{Por qué importa}
+Con estos servos, una pata larga y muy abierta no es viable. Esta cota sirve de punto de partida para \texttt{hexapod\_params.xacro} desde el primer día. El estudio de dimensiones (\Eo) la refina con el peso propio de las patas y con la dinámica medida en Gazebo.
+\end{destacado}
+
+% ====================== 5. ARQUITECTURA ======================
+\Needspace{14\baselineskip}
+\section{Arquitectura del sistema}
+
+\subsection{Cuerpo y patas}
+
+El cuerpo es un \textbf{hexágono regular horizontal}, con una pata en cada vértice. El robot avanza hacia una \textbf{cara} y no hacia un vértice. Así quedan 3 patas simétricas por lado, a $\pm30^\circ$, $\pm90^\circ$ y $\pm150^\circ$ del eje de avance, y la cámara queda centrada en la cara frontal. El radio $R$ del hexágono es un resultado del estudio.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=1.0]
+  \def\R{2.2}
+  \draw[navy,line width=1.2pt,fill=navy!5] (30:\R) -- (90:\R) -- (150:\R) -- (210:\R) -- (270:\R) -- (330:\R) -- cycle;
+  \foreach \a in {30,90,150,210,270,330}{
+    \draw[cControl,line width=2pt] (\a:\R) -- (\a:{\R+1.3});
+    \fill[cControl] (\a:{\R+1.3}) circle (2.5pt);
+  }
+  \draw[-{Stealth[length=3mm]},naranjo,line width=1.2pt] (0,0) -- (0:1.6) node[right,font=\small\bfseries]{avance $x$};
+  \fill[cSens] (0:{\R*0.866}) circle (3pt);
+  \node[font=\scriptsize,cSens,right] at ($(0:{\R*0.866})+(0.05,-0.3)$) {cámara};
+  \fill[cSens] (0,0) circle (2.5pt) node[below left,font=\scriptsize]{IMU};
+  \draw[dashed,gris] (0,0) -- (30:\R) node[midway,above left,font=\scriptsize]{$R$};
+  \draw[-{Stealth[length=3mm]},gris,line width=0.8pt] (0,0) -- (90:0.9) node[left,font=\scriptsize]{$y$};
+  \node[font=\scriptsize\bfseries] at (30:{\R+1.75}) {LF};
+  \node[font=\scriptsize\bfseries] at (90:{\R+1.75}) {LM};
+  \node[font=\scriptsize\bfseries] at (150:{\R+1.75}) {LR};
+  \node[font=\scriptsize\bfseries] at (330:{\R+1.75}) {RF};
+  \node[font=\scriptsize\bfseries] at (270:{\R+1.75}) {RM};
+  \node[font=\scriptsize\bfseries] at (210:{\R+1.75}) {RR};
+\end{tikzpicture}
+\caption{Cuerpo hexagonal regular visto desde arriba (convención REP-103: $x$ hacia el frente, $y$ hacia la izquierda). Las patas salen de los vértices y el frente es una cara.}
+\end{figure}
+
+\subsection{Flujo de datos}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  n/.style={draw=navy,fill=navy!6,rounded corners=2pt,font=\scriptsize\bfseries,align=center,minimum height=7mm,inner sep=3pt},
+  t/.style={draw=gris,fill=gris!10,font=\tiny\ttfamily,align=center,minimum height=6mm,inner sep=2pt},
+  m/.style={draw=cMicro,fill=cMicro!10,rounded corners=2pt,font=\scriptsize\bfseries,align=center,minimum height=7mm,inner sep=3pt},
+  a/.style={-{Stealth[length=2mm]},line width=0.7pt,draw=black!70},
+  node distance=4mm and 5mm]
+  \node[m] (esp) at (0,-1.8) {ESP32 +\\joystick};
+  \node[m] (ag) at (2.7,-1.8) {micro\_ros\\agent};
+  \node[t] (joy) at (5.3,-1.8) {/hexapod/\\joystick};
+  \node[n] (j2t) at (7.9,-1.8) {joy\_to\\twist};
+  \node[n] (kb) at (5.3,0) {keyboard\\teleop};
+  \node[t] (cmd) at (7.9,0) {/hexapod/\\cmd\_vel};
+  \node[n] (gait) at (10.6,0) {gait\_node\\(marcha + IK)};
+  \node[t] (lc) at (10.6,-1.8) {/legs\_controller/\\commands};
+  \node[n] (gz) at (13.6,-1.8) {gz\_ros2\_control\\(Gazebo)};
+  \node[t] (js) at (13.6,0) {/joint\_states};
+  \node[n] (rviz) at (13.6,1.6) {RViz};
+  \draw[a] (esp) -- node[below,font=\tiny]{USB} (ag);
+  \draw[a] (ag) -- (joy);
+  \draw[a] (joy) -- (j2t);
+  \draw[a] (j2t) -- (cmd);
+  \draw[a] (kb) -- (cmd);
+  \draw[a] (cmd) -- (gait);
+  \draw[a] (gait) -- (lc);
+  \draw[a] (lc) -- (gz);
+  \draw[a] (gz) -- (js);
+  \draw[a] (js) -- (rviz);
+\end{tikzpicture}
+\caption{Del operador a las articulaciones. En naranjo, lo que depende de la ESP32.}
+\end{figure}
+
+Hay un solo nodo, \texttt{gait\_node}, que calcula los 18 ángulos. El teclado y el joystick solo piden una \textbf{velocidad del cuerpo}, un mensaje \texttt{geometry\_msgs/Twist} con avance $v_x$, desplazamiento lateral $v_y$ y giro $\omega_z$. Así ambas fuentes son intercambiables y la marcha no sabe de dónde viene la orden.
+
+\subsection{Controladores}
+
+\begin{itemize}
+  \item \texttt{joint\_state\_broadcaster}: publica \texttt{/joint\_states} con el ángulo medido de las 18 articulaciones.
+  \item \texttt{legs\_controller} (\texttt{JointGroupPositionController}): recibe un vector de 18 ángulos y lo copia tal cual a las articulaciones. No interpola. La suavidad la pone la marcha, que publica a 50 Hz.
+\end{itemize}
+
+% ====================== 6. CRONOGRAMA ======================
+\Needspace{14\baselineskip}
+\section{Cronograma}\label{sec:cronograma}
+
+Cada día se divide en tres bloques: mañana, tarde y noche. Hoy jueves solo queda la noche. El color indica el tipo de trabajo; la intensidad, qué tan pronto parte.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1.12cm,y=0.55cm]
+  % columnas: 1 jue-n | 2 vie-m 3 vie-t 4 vie-n | 5 sab-m 6 sab-t 7 sab-n | 8 dom-m 9 dom-t 10 dom-n
+  \foreach \d/\x/\w in {Jue 26/0/1,Vie 27/1/3,Sáb 28/4/3,Dom 29/7/3}{
+    \draw[gris!50] (\x,0.6) rectangle ++(\w,-11.2);
+    \node[font=\small\bfseries,navy] at (\x+\w/2,1.1) {\d};
+  }
+  \foreach \i/\l in {0/N,1/M,2/T,3/N,4/M,5/T,6/N,7/M,8/T,9/N}{\node[font=\tiny,gris] at (\i+0.5,0.25) {\l};}
+  \newcommand{\barra}[5]{% fila, inicio, fin, color, texto
+    \fill[#4,rounded corners=1.5pt] (#2+0.05,-#1+0.05-0.45) rectangle (#3-0.05,-#1-0.45-0.35);
+    \node[anchor=east,font=\scriptsize] at (-0.1,-#1-0.6) {#5};}
+  \barra{0}{0}{1}{cModelo}{E0 Workspace y parámetros}
+  \barra{1}{0}{2}{cControl}{E1 Cinemática de una pata}
+  \barra{2}{1}{3}{cModelo}{E2 Modelo completo en RViz}
+  \barra{3}{2}{4}{cSim}{E3 De pie en Gazebo}
+  \barra{4}{4}{6}{cControl!75}{E4 Marcha y teclado}
+  \barra{5}{5}{6}{cSens!75}{E5 Sensores}
+  \barra{6}{6}{7}{cMicro!75}{E6 micro-ROS}
+  \barra{7}{6}{7}{cInteg!75}{E7 Integración y pruebas}
+  \barra{8}{7}{9}{cEstudio!55}{E8 Estudio de dimensiones}
+  \barra{9}{8}{10}{cEntrega!55}{E9 Documentación y entrega}
+  % línea de corte
+  \draw[sRojo,dashed,line width=1pt] (8,0.6) -- (8,-11);
+  \node[sRojo,font=\tiny\bfseries,anchor=south,align=center] at (8,-11.9) {línea de corte};
+\end{tikzpicture}
+\caption{Cronograma por bloques (N: noche, M: mañana, T: tarde). A la derecha de la línea de corte queda lo que se recorta primero si falta tiempo.}
+\end{figure}
+
+\begin{destacado}[sRojo]{Si falta tiempo: qué se recorta y en qué orden}
+\begin{enumerate}
+  \item La verificación de torques en Gazebo (\Eo, T4). El estudio queda con el modelo analítico.
+  \item La prueba en limpio dentro de un contenedor (\Esi, T3).
+  \item El desplazamiento lateral y el giro en el lugar. Se conservan avanzar, retroceder y girar avanzando.
+\end{enumerate}
+\textbf{Ningún punto de la pauta se recorta.} \En\ no se recorta: la documentación se escribe al cerrar cada etapa, no al final.
+\end{destacado}
+
+% ====================== 7. ETAPAS ======================
+\Needspace{14\baselineskip}
+\section{Etapas}
+
+Cada etapa tiene esta estructura:
+\begin{itemize}
+  \item \textbf{qué hay que entender}, para estudiar y explicar en la presentación;
+  \item \textbf{tareas};
+  \item \textbf{entregables con su evidencia};
+  \item \textbf{qué mostrar en la presentación}.
+\end{itemize}
+Una etapa cierra cuando todas sus evidencias existen y su sección de \texttt{DOCUMENTACION.md} está escrita.
+
+% ---------- E0 ----------
+\subsection{\texorpdfstring{\Ez\ }{E0 }Workspace y parámetros}
+\ficha{cModelo}{Modelo}{Jueves 26, noche}{P1, P11}
+
+\subsubsection{Qué hay que entender}
+\begin{itemize}
+  \item \textbf{Workspace colcon:} una carpeta con \texttt{src/}. \texttt{colcon build} compila cada paquete y deja el resultado en \texttt{install/}. \texttt{source install/setup.bash} le dice a la terminal dónde están.
+  \item \textbf{Paquete \texttt{ament\_cmake} vs.\ \texttt{ament\_python}:}
+  \begin{itemize}
+    \item \texttt{ament\_cmake} sirve para archivos que solo se instalan (URDF, launch, configuración).
+    \item \texttt{ament\_python} sirve para nodos en Python.
+  \end{itemize}
+  \item \textbf{Archivo único de parámetros:} todas las medidas y masas viven en \texttt{hexapod\_params.xacro}. El URDF las lee y la cinemática también (vía \texttt{robot\_description}). Cambiar un largo es cambiar una línea.
+\end{itemize}
+
+\subsubsection{Tareas}
+\begin{enumerate}[label=T\arabic*]
+  \item Crear los paquetes:
+  \begin{itemize}
+    \item \texttt{hexapod\_description}: el modelo;
+    \item \texttt{hexapod\_control}: cinemática, marcha y teleoperación;
+    \item \texttt{hexapod\_bringup}: Gazebo, controladores y launch.
+  \end{itemize}
+  \item Escribir \texttt{hexapod\_params.xacro} con las masas de la sección 4. Los largos parten de la cota $d \leq 8{,}8$ cm.
+  \item Copiar desde Octavius las macros de inercia, los linters y \texttt{make\_release.sh}.
+\end{enumerate}
+
+\subsubsection{Entregables}
+\begin{tabularx}{\linewidth}{@{}l Y Y@{}}
+\toprule \textbf{} & \textbf{Entregable} & \textbf{Evidencia}\\ \midrule
+D1 & 3 paquetes compilando & \texttt{colcon build} sin errores ni advertencias\\
+D2 & Parámetros con origen de cada dato & Cada valor comentado: medido, hoja o hipótesis\\
+\bottomrule
+\end{tabularx}
+
+% ---------- E1 ----------
+\subsection{\texorpdfstring{\Eu\ }{E1 }Cinemática de una pata}
+\ficha{cControl}{Control}{Jueves 26 noche -- viernes 27 mañana}{base de P8}
+
+\subsubsection{Qué hay que entender}
+Cada pata tiene 3 articulaciones:
+\begin{itemize}
+  \item \textbf{coxa} ($\theta_1$): gira en torno al eje vertical; mueve la pata adelante y atrás;
+  \item \textbf{fémur} ($\theta_2$): sube y baja la pata;
+  \item \textbf{tibia} ($\theta_3$): es la rodilla.
+\end{itemize}
+Los largos son $L_1$ (coxa), $L_2$ (fémur) y $L_3$ (tibia). El marco de la pata tiene $x$ hacia afuera del cuerpo y $z$ hacia arriba.
+
+\textbf{Cinemática directa (FK).} Dados los ángulos, ¿dónde queda el pie?
+\begin{align}
+r &= L_1 + L_2\cos\theta_2 + L_3\cos(\theta_2+\theta_3)\\
+x &= r\cos\theta_1,\qquad y = r\sin\theta_1,\qquad z = L_2\sin\theta_2 + L_3\sin(\theta_2+\theta_3)
+\end{align}
+
+\textbf{Cinemática inversa (IK).} Dado dónde quiero el pie, ¿qué ángulos necesito? Es lo que usa la marcha 50 veces por segundo.
+\begin{align}
+\theta_1 &= \operatorname{atan2}(y,\,x)\\
+\rho &= \sqrt{x^2+y^2} - L_1,\qquad D^2 = \rho^2 + z^2\\
+\cos\theta_3 &= \frac{D^2 - L_2^2 - L_3^2}{2L_2L_3},\qquad \theta_3 = -\arccos(\cdot)\quad\text{(rodilla hacia arriba)}\\
+\theta_2 &= \operatorname{atan2}(z,\,\rho) - \operatorname{atan2}\!\big(L_3\sin\theta_3,\; L_2 + L_3\cos\theta_3\big)
+\end{align}
+La ecuación del codo es la \textbf{ley de cosenos} aplicada al triángulo fémur--tibia--recta al pie. Solo hay solución si $|L_2-L_3| \leq D \leq L_2+L_3$, es decir, si el pie está al alcance. Si no lo está, la función lo informa en vez de devolver ángulos inválidos.
+
+\subsubsection{Tareas}
+\begin{enumerate}[label=T\arabic*]
+  \item \texttt{kinematics.py} con \texttt{fk()} e \texttt{ik()}, sin ROS, para poder probarlo solo.
+  \item Test: recorrer miles de puntos alcanzables y verificar que FK(IK($p$)) $= p$.
+  \item Macro \texttt{leg.xacro} y una pata sola en RViz con 3 sliders.
+\end{enumerate}
+
+\subsubsection{Entregables}
+\begin{tabularx}{\linewidth}{@{}l Y Y@{}}
+\toprule \textbf{} & \textbf{Entregable} & \textbf{Evidencia}\\ \midrule
+D3 & FK/IK probadas & Test pasa con error $< 0{,}1$ mm\\
+D4 & Pata en RViz coincide con FK & Captura: pose de sliders y posición del pie en TF iguales a FK\\
+\bottomrule
+\end{tabularx}
+
+\textbf{Para la presentación:} el dibujo de la pata con sus 3 ángulos, las ecuaciones de la IK y el resultado del test.
+
+% ---------- E2 ----------
+\subsection{\texorpdfstring{\Ed\ }{E2 }Modelo completo en RViz}
+\ficha{cModelo}{Modelo}{Viernes 27, mañana y tarde}{P2, P3, P4, P5}
+
+\subsubsection{Qué hay que entender}
+\begin{itemize}
+  \item \textbf{URDF:} describe al robot como un árbol de eslabones (\emph{links}) unidos por articulaciones (\emph{joints}). Cada eslabón tiene tres partes:
+  \begin{itemize}
+    \item \texttt{visual}: lo que se ve;
+    \item \texttt{collision}: lo que choca;
+    \item \texttt{inertial}: masa e inercia.
+  \end{itemize}
+  \item \textbf{XACRO:} URDF con variables y macros. La macro de pata se llama 6 veces, cambiando el nombre y el ángulo de montaje $\varphi_i \in \{\pm30^\circ, \pm90^\circ, \pm150^\circ\}$.
+  \item \textbf{Inercia de una caja} de masa $m$ y lados $a, b, c$. Gazebo la necesita realista; si no, el robot tiembla o “explota”:
+  \begin{equation}
+  I_{xx} = \tfrac{m}{12}(b^2+c^2),\quad I_{yy} = \tfrac{m}{12}(a^2+c^2),\quad I_{zz} = \tfrac{m}{12}(a^2+b^2)
+  \end{equation}
+  \item \textbf{Límites del servo en el URDF:}
+  \begin{itemize}
+    \item velocidad: $60^\circ / 0{,}14\,\text{s} \approx 7{,}5$ rad/s;
+    \item esfuerzo: 1,08 N·m;
+    \item rango de cada articulación: el mecánico.
+  \end{itemize}
+  \item \textbf{\texttt{robot\_state\_publisher}:} toma el URDF y \texttt{/joint\_states}, y publica la TF, que es la posición de cada eslabón. \textbf{\texttt{joint\_state\_publisher\_gui}:} publica \texttt{/joint\_states} desde sliders.
+\end{itemize}
+
+\subsubsection{Tareas}
+\begin{enumerate}[label=T\arabic*]
+  \item \texttt{body.xacro}: hexágono regular con radio $R$ del archivo de parámetros.
+  \item \texttt{components.xacro}: Raspberry, 2 PCA9685 y batería (abajo, para bajar el centro de masa) como cajas con su masa.
+  \item Cada servo como caja de 55 g en su posición real dentro de la pata.
+  \item \texttt{sensors.xacro}: \texttt{imu\_link} al centro y \texttt{camera\_link} + \texttt{camera\_optical\_link} en la cara frontal.
+  \item \texttt{display.launch.py} y \texttt{display.rviz} con RobotModel y TF.
+\end{enumerate}
+
+\subsubsection{Entregables}
+\begin{tabularx}{\linewidth}{@{}l Y Y@{}}
+\toprule \textbf{} & \textbf{Entregable} & \textbf{Evidencia}\\ \midrule
+D5 & URDF válido con 18 articulaciones & \texttt{check\_urdf} OK y árbol en PDF\\
+D6 & RViz con 18 sliders & Captura moviendo una pata\\
+D7 & Masa total del modelo $\approx$ masa estimada & Suma de masas del URDF $= 1{,}87 \pm 0{,}05$ kg\\
+\bottomrule
+\end{tabularx}
+
+% ---------- E3 ----------
+\subsection{\texorpdfstring{\Et\ }{E3 }De pie en Gazebo}
+\ficha{cSim}{Simulación}{Viernes 27, tarde y noche --- \textbf{etapa de mayor riesgo}}{P6, base de P8}
+
+\subsubsection{Qué hay que entender}
+\begin{itemize}
+  \item \textbf{Base flotante:} a diferencia de Octavius, nada fija el cuerpo al mundo. El robot solo se sostiene si:
+  \begin{itemize}
+    \item los pies tocan el suelo;
+    \item la fricción impide que resbalen;
+    \item los servos aguantan el peso.
+  \end{itemize}
+  \item \textbf{Contacto:} el pie es una \textbf{esfera}, porque toca el suelo en un punto y es estable. Se le da fricción alta ($\mu \approx 1$) y un contacto algo blando para que no rebote.
+  \item \textbf{\texttt{gz\_ros2\_control}:} conecta \texttt{ros2\_control} con el motor de física. Para cada articulación expone:
+  \begin{itemize}
+    \item una interfaz de \textbf{comando} de posición (lo que pedimos);
+    \item interfaces de \textbf{estado} de posición y velocidad (lo medido, como un encoder ideal).
+  \end{itemize}
+  \item \textbf{Postura inicial suave:} el robot aparece con las patas recogidas. Las patas bajan de a poco hasta levantar el cuerpo a la altura de trabajo. Si se pidiera la postura de golpe, el robot saltaría.
+\end{itemize}
+
+\subsubsection{Tareas}
+\begin{enumerate}[label=T\arabic*]
+  \item \texttt{ros2\_control.xacro} y \texttt{controllers.yaml} con \texttt{joint\_state\_broadcaster} y \texttt{legs\_controller} (18 articulaciones).
+  \item \texttt{gazebo.launch.py}: mundo plano, \emph{spawn} sobre el suelo y carga de controladores.
+  \item Nodo o rutina de postura: interpolar desde las patas recogidas hasta la postura de pie en 2--3 s.
+  \item Ajustar fricción, contacto y paso de física hasta que se sostenga.
+\end{enumerate}
+
+\subsubsection{Entregables}
+\begin{tabularx}{\linewidth}{@{}l Y Y@{}}
+\toprule \textbf{} & \textbf{Entregable} & \textbf{Evidencia}\\ \midrule
+D8 & Robot de pie en Gazebo & 60 s sin hundirse; altura del cuerpo estable ($\pm 2$ mm) en \texttt{/tf}\\
+D9 & Controladores activos & \texttt{ros2 control list\_controllers}: ambos \emph{active}\\
+\bottomrule
+\end{tabularx}
+
+\textbf{Puntos por tratar.} Si el robot se hunde o tiembla, revisar en este orden:
+\begin{enumerate}
+  \item las inercias;
+  \item las colisiones duplicadas entre eslabones vecinos;
+  \item la fricción;
+  \item el paso de física.
+\end{enumerate}
+Si sigue fallando el viernes en la noche, se reduce la masa del cuerpo en el modelo solo para validar el resto, y se anota en la documentación.
+
+% ---------- E4 ----------
+\subsection{\texorpdfstring{\Ec\ }{E4 }Marcha trípode y teclado}
+\ficha{cControl}{Control}{Sábado 28, mañana y tarde}{P8}
+
+\subsubsection{Qué hay que entender}
+\textbf{Marcha trípode.} Las patas se dividen en dos grupos que se alternan:
+\begin{itemize}
+  \item grupo A: LF, RM, LR;
+  \item grupo B: RF, LM, RR.
+\end{itemize}
+Mientras un grupo apoya, el otro vuela. Siempre hay un triángulo de 3 patas en el suelo.
+
+Cada pata $i$ tiene una fase $\phi_i \in [0,1)$ que avanza con el tiempo, con periodo $T$. El grupo B va desfasado medio ciclo. Con fracción de apoyo $\beta = 0{,}5$:
+\begin{align}
+\text{apoyo } (\phi < \beta):&\quad \mathbf p_i = \mathbf p_{0,i} + \Big(\tfrac12 - \tfrac{\phi}{\beta}\Big)\boldsymbol\Delta_i\\
+\text{vuelo } (\phi \geq \beta):&\quad u = \tfrac{\phi-\beta}{1-\beta},\quad \mathbf p_i = \mathbf p_{0,i} + \Big(u-\tfrac12\Big)\boldsymbol\Delta_i + h\sin(\pi u)\,\hat z
+\end{align}
+\begin{itemize}
+  \item En el \textbf{apoyo}, el pie se mueve hacia atrás respecto del cuerpo, y eso empuja al robot hacia adelante.
+  \item En el \textbf{vuelo}, el pie vuelve adelante por un arco de altura $h$.
+\end{itemize}
+
+El \textbf{vector de paso} sale de la velocidad pedida. Incluye el giro, porque al girar cada pata recorre un arco distinto según su posición $\mathbf p_{0,i}$:
+\begin{equation}
+\boldsymbol\Delta_i = \beta T\,\big(\mathbf v + \omega_z\,\hat z \times \mathbf p_{0,i}\big)
+\end{equation}
+Cada $\mathbf p_i$ (en el marco del cuerpo) se pasa al marco de su pata. Después la IK de \Eu\ entrega los 3 ángulos.
+
+\subsubsection{Tareas}
+\begin{enumerate}[label=T\arabic*]
+  \item \texttt{gait.py}, sin ROS: fase, trayectorias y vector de paso, con tests.
+  \item \texttt{gait\_node.py}: escucha \texttt{/hexapod/cmd\_vel} y publica 18 ángulos a 50 Hz en \texttt{/legs\_controller/commands}.
+  \item \texttt{keyboard\_teleop.py}, adaptado de Octavius: las teclas ajustan $v_x$, $v_y$ y $\omega_z$.
+\end{enumerate}
+
+\subsubsection{Entregables}
+\begin{tabularx}{\linewidth}{@{}l Y Y@{}}
+\toprule \textbf{} & \textbf{Entregable} & \textbf{Evidencia}\\ \midrule
+D10 & Camina con teclado & Video: avanza, retrocede y gira\\
+D11 & Velocidad real $\approx$ pedida & Desplazamiento medido en \texttt{/tf} durante 10 s, con error menor al 20\,\%\\
+\bottomrule
+\end{tabularx}
+
+\textbf{Para la presentación:} el diagrama de los dos grupos de patas en el tiempo y el video caminando.
+
+% ---------- E5 ----------
+\subsection{\texorpdfstring{\Eci\ }{E5 }Sensores: IMU y cámara}
+\ficha{cSens}{Sensores}{Sábado 28, tarde}{P5, P7}
+
+\subsubsection{Qué hay que entender}
+\begin{itemize}
+  \item \textbf{IMU} (\texttt{sensor\_msgs/Imu}): entrega la orientación del cuerpo (cuaternión), la velocidad angular y la aceleración. En un hexápodo sirve para saber si el cuerpo está inclinado. El plugin de Gazebo acepta ruido, que se configura con valores de la hoja del BNO085.
+  \item \textbf{Cámara} (\texttt{sensor\_msgs/Image}): se modela como cámara estenopeica (\emph{pinhole}). Con un ancho de imagen $W$ y un campo de visión horizontal (HFOV), la distancia focal en píxeles es:
+  \begin{equation}
+  f_x = \frac{W/2}{\tan(\text{HFOV}/2)} = \frac{320}{\tan 33^\circ} \approx 493\ \text{px}\quad (W = 640,\ \text{HFOV} = 66^\circ)
+  \end{equation}
+  La resolución se reduce respecto a la cámara real (12 MP) para no cargar el PC.
+  \item \textbf{\texttt{ros\_gz\_bridge}:} traduce los tópicos de Gazebo a ROS\,2. Se configura en \texttt{gz\_bridge.yaml}.
+  \item \textbf{\texttt{camera\_optical\_link}:} la convención REP-103 pide que la cámara mire hacia $+z$ con $x$ a la derecha, distinto del resto del robot. Por eso se agrega un marco extra.
+\end{itemize}
+
+\subsubsection{Entregables}
+\begin{tabularx}{\linewidth}{@{}l Y Y@{}}
+\toprule \textbf{} & \textbf{Entregable} & \textbf{Evidencia}\\ \midrule
+D12 & IMU publicando & \texttt{ros2 topic hz /hexapod/imu} $\approx$ 100 Hz; al inclinar el robot cambia la orientación\\
+D13 & Cámara publicando & \texttt{ros2 topic hz /hexapod/camera/image} $\approx$ 15 Hz; imagen visible en RViz\\
+\bottomrule
+\end{tabularx}
+
+% ---------- E6 ----------
+\subsection{\texorpdfstring{\Es\ }{E6 }micro-ROS: joystick ESP32}
+\ficha{cMicro}{micro-ROS}{Sábado 28, noche --- \textbf{la prueba con hardware queda para cuando se compre la ESP32}}{P9}
+
+\subsubsection{Qué hay que entender}
+\begin{itemize}
+  \item \textbf{micro-ROS:} una versión de ROS\,2 para microcontroladores. La ESP32 no habla DDS directamente. Habla con el \textbf{agente} (\texttt{micro\_ros\_agent}) por USB serial, y el agente la presenta al resto de ROS\,2 como un nodo más.
+  \item \textbf{Qué hace la ESP32:} lee los dos ejes del joystick con el ADC, los normaliza a $[-1, 1]$ y los publica como \texttt{sensor\_msgs/Joy} en \texttt{/hexapod/joystick} a 20 Hz. Reutiliza el firmware de Octavius.
+  \item \textbf{\texttt{joy\_to\_twist}:} convierte el joystick en velocidad del cuerpo, con una zona muerta $\delta$ para que el robot no se mueva con el joystick suelto:
+  \begin{equation}
+  \operatorname{dz}(a) = \begin{cases}0 & |a| < \delta\\ \operatorname{sign}(a)\,\dfrac{|a|-\delta}{1-\delta} & |a| \geq \delta\end{cases}\qquad v_x = v_{\max}\operatorname{dz}(a_y),\quad \omega_z = \omega_{\max}\operatorname{dz}(a_x)
+  \end{equation}
+\end{itemize}
+
+\subsubsection{Entregables}
+\begin{tabularx}{\linewidth}{@{}l Y Y@{}}
+\toprule \textbf{} & \textbf{Entregable} & \textbf{Evidencia}\\ \midrule
+D14 & \texttt{joy\_to\_twist} con test & Test de zona muerta y escalas pasa\\
+D15 & Robot se mueve con el tópico a mano & \texttt{ros2 topic pub /hexapod/joystick ...} hace caminar al robot\\
+D16 & Firmware compilado & Compila sin advertencias (Arduino CLI)\\
+D17 & \emph{Con la ESP32:} joystick real mueve al robot & Video: nodo de la ESP32 en \texttt{ros2 node list} y robot caminando\\
+\bottomrule
+\end{tabularx}
+
+% ---------- E7 ----------
+\subsection{\texorpdfstring{\Esi\ }{E7 }Integración y pruebas}
+\ficha{cInteg}{Integración}{Sábado 28, noche}{P10, P11}
+
+\subsubsection{Tareas}
+\begin{enumerate}[label=T\arabic*]
+  \item \texttt{bringup.launch.py}, que levanta todo. Argumentos: \texttt{use\_rviz}, \texttt{use\_microros}, \texttt{serial\_port}, \texttt{world}.
+  \item Test de consistencia: el URDF, \texttt{controllers.yaml} y \texttt{gz\_bridge.yaml} usan los mismos nombres de articulaciones y tópicos. Más los linters de ROS\,2.
+  \item Prueba en limpio: instalar desde cero en un contenedor \texttt{ros:jazzy} siguiendo solo el README. \emph{Se recorta si falta tiempo.}
+\end{enumerate}
+
+\subsubsection{Entregables}
+\begin{tabularx}{\linewidth}{@{}l Y Y@{}}
+\toprule \textbf{} & \textbf{Entregable} & \textbf{Evidencia}\\ \midrule
+D18 & Un comando levanta todo & \texttt{ros2 launch hexapod\_bringup bringup.launch.py}\\
+D19 & Tests pasan & \texttt{colcon test-result}: 0 fallas\\
+\bottomrule
+\end{tabularx}
+
+% ---------- E8 ----------
+\subsection{\texorpdfstring{\Eo\ }{E8 }Estudio de dimensiones}
+\ficha{cEstudio}{Estudio}{Domingo 29, mañana y tarde}{aporte propio (no es de la pauta)}
+
+\subsubsection{Pregunta}
+Con 18 MG996R, una LiPo 3S y la electrónica dada, ¿qué largos $L_1, L_2, L_3$ y qué radio $R$ permiten caminar con margen de torque, sin choques y de forma estable?
+
+\subsubsection{Restricciones}
+\begin{tabularx}{\linewidth}{@{}l Y@{}}
+\toprule \textbf{Criterio} & \textbf{Condición}\\ \midrule
+Torque del fémur & $F\,\rho \leq \tau_d$, donde $\rho$ es la distancia horizontal del eje del fémur al pie (incluye el peso propio de la pata)\\
+Torque de la tibia & $F\,|L_3\cos(\theta_2+\theta_3)| \leq \tau_d$\\
+Alcance & El paso completo $\pm\Delta/2$ cabe en el espacio de trabajo, dentro de los límites articulares\\
+Altura libre & Altura del cuerpo $\geq h_{\min}$ (propuesta: 6 cm)\\
+Sin choques & Patas vecinas, a $60^\circ$ entre sí, no se tocan en ningún punto del ciclo\\
+Estabilidad & Distancia del centro de masa a los bordes del triángulo de apoyo $\geq S_{\min}$\\
+Layout & Batería, Raspberry y PCA9685 caben dentro del hexágono, con el centro de masa al centro\\
+\bottomrule
+\end{tabularx}
+
+\subsubsection{Tareas}
+\begin{enumerate}[label=T\arabic*]
+  \item \texttt{analysis/dimension\_study.py}: recorre combinaciones de $(L_1, L_2, L_3, R)$, aplica las restricciones y guarda las que cumplen.
+  \item Gráficos:
+  \begin{itemize}
+    \item mapa de torque del fémur según $L_2$ y $L_3$;
+    \item espacio de trabajo de una pata;
+    \item margen de estabilidad.
+  \end{itemize}
+  \item Elegir la mejor combinación, por mayor margen mínimo, y copiarla a \texttt{hexapod\_params.xacro}.
+  \item \emph{(Bajo la línea de corte.)} Verificar en Gazebo.
+  \begin{itemize}
+    \item \textbf{Primero, una prueba de confianza:} colgar una pata con una carga conocida y comparar el esfuerzo que informa \texttt{gz\_ros2\_control} con $m\,g\,d$.
+    \item Si coincide, registrar los torques durante la marcha y compararlos con $\tau_d$.
+    \item Si no coincide, quedarse con el valor analítico y decirlo.
+  \end{itemize}
+  \item \texttt{docs/especificacion\_diseno.md}: cotas para maquinar (de eje a eje), posición de cada componente y márgenes obtenidos.
+\end{enumerate}
+
+\subsubsection{Entregables}
+\begin{tabularx}{\linewidth}{@{}l Y Y@{}}
+\toprule \textbf{} & \textbf{Entregable} & \textbf{Evidencia}\\ \midrule
+D20 & Cotas ideales & Tabla con $L_1, L_2, L_3, R$ y el margen de cada restricción\\
+D21 & Gráficos del estudio & 3 figuras en \texttt{docs/img/}\\
+D22 & Especificación de diseño & \texttt{especificacion\_diseno.md} con cotas y layout\\
+\bottomrule
+\end{tabularx}
+
+% ---------- E9 ----------
+\subsection{\texorpdfstring{\En\ }{E9 }Documentación y entrega}\label{sec:entrega}
+\ficha{cEntrega}{Entrega}{Cada cierre de etapa + domingo 29, tarde y noche}{P12, P13, P14}
+
+\subsubsection{Tareas}
+\begin{enumerate}[label=T\arabic*]
+  \item \texttt{DOCUMENTACION.md}: una sección por etapa, escrita al cerrarla. Para cada componente: qué es, por qué se usa, qué datos entran y salen, y cómo se procesan.
+  \item Tutorial: \texttt{DOCUMENTACION.md} $\rightarrow$ \texttt{.docx} y \texttt{.pdf}.
+  \item Presentación Beamer con la plantilla USACH de Octavius ($\leq$ 15 min): \texttt{.tex} editable + \texttt{.pdf}.
+  \item \texttt{make\_release.sh} $\rightarrow$ \texttt{cesar\_olivares\_2026\_2.zip}, sin \texttt{build/}, \texttt{install/} ni \texttt{log/}.
+\end{enumerate}
+
+\subsubsection{Checklist de formato de la presentación}
+\begin{itemize}
+  \item Membrete y logo USACH.
+  \item Título, estudiante, profesor (José Pascal) y fecha.
+  \item Numeración de páginas, tablas, figuras y ecuaciones.
+  \item Letra uniforme y figuras con buena resolución.
+  \item Índice, introducción y conclusiones.
+  \item Referencias IEEE.
+\end{itemize}
+
+\subsubsection{Guion sugerido (15 min)}
+\begin{tabularx}{\linewidth}{@{}l r Y@{}}
+\toprule \textbf{Bloque} & \textbf{Min} & \textbf{Contenido}\\ \midrule
+Introducción & 1,5 & Qué es un hexápodo, objetivo y alcance\\
+Modelo & 3 & Cuerpo hexagonal, macro de pata, componentes reales, RViz\\
+Cinemática y marcha & 3,5 & FK/IK, trípode, video caminando\\
+Sensores y micro-ROS & 2,5 & IMU, cámara, flujo del joystick\\
+Estudio de dimensiones & 3 & Restricciones, gráficos, cotas finales\\
+Conclusiones & 1,5 & Qué se logró, qué falta (ESP32, robot real)\\
+\bottomrule
+\end{tabularx}
+
+% ====================== 8. CONTROL ======================
+\Needspace{14\baselineskip}
+\section{Control de avance}
+
+\textbf{Avance} $=$ entregables cumplidos $/$ 22. Un entregable cuenta solo si su evidencia existe. D17 depende de la ESP32 y queda fuera del total de esta semana, así que el máximo esta semana es 21/22.
+
+\textbf{Revisión al final de cada día} (en vez de mensual, por el plazo), con semáforo por etapa:
+
+\begin{tabularx}{\linewidth}{@{}l Y@{}}
+\toprule
+\pill{sVerde}{Verde} & Todo lo del día cumplido.\\
+\pill{sAmbar}{Ámbar} & Atraso de un bloque o menos. Se mueve al bloque siguiente.\\
+\pill{sRojo}{Rojo} & Falta la mitad o más de la etapa, o peligra un punto de la pauta. Se aplica la línea de corte.\\
+\bottomrule
+\end{tabularx}
+
+\textbf{Cierre de etapa.} Una nota corta en \texttt{DOCUMENTACION.md} con:
+\begin{itemize}
+  \item qué se hizo;
+  \item las evidencias;
+  \item los problemas encontrados y cómo se resolvieron;
+  \item lo que hay que estudiar para la presentación.
+\end{itemize}
+
+% ====================== 9. PUNTOS ======================
+\Needspace{14\baselineskip}
+\section{Puntos por tratar}
+
+\begin{tabularx}{\linewidth}{@{}Y l Y@{}}
+\toprule \textbf{Punto} & \textbf{Afecta} & \textbf{Qué se hace mientras}\\ \midrule
+Fecha y hora exactas de entrega & Cronograma & Se asume domingo 29 nov, 23:59\\
+ESP32 + joystick por comprar & P9 & Código listo; prueba con el tópico a mano\\
+¿Los 55 g del servo incluyen los adaptadores coaxiales? & Masas & Se asume que sí\\
+Medidas L × A × H de la batería & Layout (\Eo) & Se usa un tamaño típico de 3S 5200 mAh, marcado como hipótesis\\
+Masa de la estructura impresa & Torque (\Eo) & Hipótesis de 400 g, que se recalcula con las cotas finales\\
+\bottomrule
+\end{tabularx}
+
+% ====================== 10. GLOSARIO ======================
+\Needspace{14\baselineskip}
+\section{Glosario}
+
+\begin{tabularx}{\linewidth}{@{}l Y@{}}
+\toprule
+Coxa, fémur, tibia & Los tres segmentos de una pata, de la base hacia el pie.\\
+FK / IK & Cinemática directa (de ángulos a posición del pie) e inversa (de posición a ángulos).\\
+Marcha trípode & Marcha con dos grupos de 3 patas que se alternan entre apoyo y vuelo.\\
+Base flotante & El cuerpo no está fijo al mundo; se sostiene por el contacto de las patas.\\
+URDF / XACRO & Formato que describe el robot. XACRO agrega variables y macros.\\
+TF & Árbol de marcos de referencia con la posición de cada eslabón en el tiempo.\\
+\texttt{ros2\_control} & Marco de ROS\,2 que conecta controladores con el hardware (o con Gazebo).\\
+micro-ROS & ROS\,2 para microcontroladores; se comunica a través de un agente en el PC.\\
+Torque de bloqueo & Torque máximo del servo trabado. Se diseña con la mitad.\\
+Margen de estabilidad & Distancia del centro de masa a los bordes del triángulo de apoyo.\\
+\bottomrule
+\end{tabularx}
+
+\Needspace{14\baselineskip}
+\section{Enlaces útiles}
+\begin{itemize}
+  \item ROS\,2 Jazzy: \url{https://docs.ros.org/en/jazzy/}
+  \item ros2\_control: \url{https://control.ros.org/jazzy/}
+  \item Gazebo Harmonic: \url{https://gazebosim.org/docs/harmonic/}
+  \item micro-ROS: \url{https://micro.ros.org/}
+\end{itemize}
+
+\end{document}

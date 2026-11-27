@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!-- Colores (RGBA) del hexápodo. Gazebo los toma al convertir el URDF a SDF. -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <material name="hexapod_orange"><color rgba="0.92 0.46 0.00 1.0"/></material>
+  <material name="hexapod_navy"><color rgba="0.00 0.18 0.42 1.0"/></material>
+  <material name="hexapod_dark"><color rgba="0.15 0.15 0.17 1.0"/></material>
+  <material name="hexapod_grey"><color rgba="0.62 0.64 0.67 1.0"/></material>
+  <material name="hexapod_green"><color rgba="0.10 0.55 0.25 1.0"/></material>
+  <material name="hexapod_blue"><color rgba="0.15 0.35 0.85 1.0"/></material>
+</robot>

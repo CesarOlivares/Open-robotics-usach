@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!--
+  Macros de inercia para sólidos homogéneos.
+
+  Cada link necesita masa e inercia para que el motor de física de Gazebo
+  lo simule; RViz no las usa. Se calculan con las fórmulas de un sólido de
+  densidad uniforme, respecto a su centro de masa:
+
+  Caja de lados x, y, z:
+      Ixx = m (y² + z²) / 12      Iyy = m (x² + z²) / 12      Izz = m (x² + y²) / 12
+
+  Cilindro de radio r y altura h, con eje en Z:
+      Ixx = Iyy = m (3r² + h²) / 12        Izz = m r² / 2
+
+  Los productos de inercia (Ixy, Ixz, Iyz) son 0 porque los ejes del link
+  coinciden con los ejes de simetría del sólido.
+
+  Parámetro "origin": pose del centro de masa dentro del link.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="box_inertial" params="m x y z *origin">
+    <inertial>
+      <xacro:insert_block name="origin"/>
+      <mass value="${m}"/>
+      <inertia ixx="${m * (y*y + z*z) / 12.0}" ixy="0.0" ixz="0.0"
+               iyy="${m * (x*x + z*z) / 12.0}" iyz="0.0"
+               izz="${m * (x*x + y*y) / 12.0}"/>
+    </inertial>
+  </xacro:macro>
+
+  <xacro:macro name="cylinder_inertial" params="m r h *origin">
+    <inertial>
+      <xacro:insert_block name="origin"/>
+      <mass value="${m}"/>
+      <inertia ixx="${m * (3*r*r + h*h) / 12.0}" ixy="0.0" ixz="0.0"
+               iyy="${m * (3*r*r + h*h) / 12.0}" iyz="0.0"
+               izz="${m * r * r / 2.0}"/>
+    </inertial>
+  </xacro:macro>
+
+</robot>
