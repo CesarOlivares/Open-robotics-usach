@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!--
+  Banco de prueba de UNA pata (etapa E1).
+
+  Monta la macro de pata sobre un soporte fijo para revisar en RViz que la
+  pata coincide con la cinemática directa de kinematics.py. El hexápodo
+  completo está en hexapod.urdf.xacro.
+
+    ros2 launch hexapod_description display.launch.py model:=leg_test
+-->
+<robot name="hexapod_leg_test" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find hexapod_description)/urdf/hexapod_params.xacro"/>
+  <xacro:include filename="$(find hexapod_description)/urdf/macros/inertial.xacro"/>
+  <xacro:include filename="$(find hexapod_description)/urdf/materials.xacro"/>
+  <xacro:include filename="$(find hexapod_description)/urdf/leg.xacro"/>
+
+  <!-- Soporte: representa el servo de la coxa montado en el cuerpo -->
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="${servo_y} ${servo_x} ${servo_z}"/></geometry>
+      <material name="hexapod_dark"/>
+    </visual>
+  </link>
+
+  <xacro:hexapod_leg prefix="test" parent="base_link" mount_angle="0" radius="0"/>
+
+</robot>
