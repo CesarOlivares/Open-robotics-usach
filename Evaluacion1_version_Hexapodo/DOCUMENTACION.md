@@ -341,3 +341,58 @@ ros2 launch hexapod_bringup gazebo.launch.py
 ros2 run hexapod_control keyboard_teleop          # en otra terminal
 python3 scripts/medir_marcha.py                   # o medir la velocidad
 ```
+
+---
+
+## E5 — Sensores: IMU y cámara
+
+**Conceptos**
+
+- **IMU** (`sensor_msgs/Imu`): orientación del cuerpo (cuaternión),
+  velocidad angular (giroscopio) y aceleración lineal. Quieta mide la
+  gravedad, 9,81 m/s² hacia arriba. En un hexápodo dice si el cuerpo se
+  inclina o gira.
+- **Cámara** (`sensor_msgs/Image` + `CameraInfo`): modelo estenopeico. Con
+  ancho W y campo de visión horizontal HFOV, la focal en píxeles es
+  fx = (W/2) / tan(HFOV/2) = 320 / tan 33° ≈ 493 px (W = 640, HFOV = 66°,
+  el de la Pi Camera Module 3). La resolución se baja a 640 × 480 a 15 Hz
+  para no cargar el PC.
+- **Marco óptico:** la imagen va en `camera_optical_link` (z adelante, x a
+  la derecha, y abajo), la convención que esperan los nodos de visión.
+- **ros_gz_bridge:** Gazebo publica en sus propios tópicos; el puente los
+  pasa a ROS 2 (`gz_bridge.yaml`).
+
+**Qué se hizo**
+
+| Archivo | Rol |
+|---|---|
+| `hexapod_description/urdf/sensors_gazebo.xacro` | Plugin de cámara (66°, 640 × 480, 15 Hz, ruido) y de IMU (100 Hz, ruido gaussiano del orden de la BNO085: giroscopio 0,005 rad/s, acelerómetro 0,03 m/s²) |
+| `hexapod_bringup/config/gz_bridge.yaml` | Puentes de `/hexapod/imu`, `/hexapod/camera/image` y `/hexapod/camera/camera_info` |
+| `hexapod_bringup/config/bringup.rviz` | Panel con la imagen de la cámara |
+| `scripts/verificar_sensores.py` | Evidencia D12–D13 |
+| `test_config_consistency.py` | Cada tópico de sensor del URDF tiene su puente; marco óptico y focal ≈ 493 px |
+
+**Evidencia** (`scripts/verificar_sensores.py`)
+
+| Entregable | Comprobación | Resultado |
+|---|---|---|
+| D12 IMU | Frecuencia | 100,0 Hz ✅ |
+| D12 IMU | Quieta: gravedad e inclinación | \|a\| = 9,811 m/s²; 0° ✅ |
+| D12 IMU | Ruido del giroscopio | σ = 0,0050 rad/s (configurado 0,005) ✅ |
+| D12 IMU | Girando 5 s a 0,4 rad/s: giro medido vs odometría de referencia | IMU 97,6° vs 98,0°; giroscopio 0,341 vs 0,342 rad/s ✅ |
+| D13 cámara | Frecuencia, tamaño y marco | 14,9 Hz, 640 × 480 rgb8, `camera_optical_link` ✅ |
+| D13 cámara | Focal en `camera_info` | fx = 492,8 px (cálculo: 493) ✅ |
+
+Imagen de la cámara con el robot de pie. La caja naranja (a la izquierda
+del robot) sale a la izquierda y el cilindro a la derecha. El horizonte
+queda sobre el centro por la inclinación de 10° hacia el suelo:
+
+![Cámara frontal](docs/img/camara_frontal.png)
+
+**Cómo verlo**
+
+```bash
+ros2 launch hexapod_bringup gazebo.launch.py     # RViz muestra la imagen
+ros2 topic hz /hexapod/imu
+python3 scripts/verificar_sensores.py
+```

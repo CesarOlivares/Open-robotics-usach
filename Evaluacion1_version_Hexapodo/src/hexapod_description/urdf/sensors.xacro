@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--
-  Sensores: marcos y masas (pauta P8). Los plugins de Gazebo que los hacen
-  publicar datos se agregan en E5 (sensors_gazebo.xacro).
+  Sensores: marcos y masas (pautas P5 y P8). Sus plugins de Gazebo están
+  en sensors_gazebo.xacro.
 
     imu_link              BNO085 en el centro del cuerpo, pegada bajo la
                           placa superior. En el centro mide la orientación

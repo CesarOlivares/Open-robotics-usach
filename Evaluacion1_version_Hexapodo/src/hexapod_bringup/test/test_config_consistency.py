@@ -93,3 +93,25 @@ def test_tope_del_teclado_igual_al_de_la_marcha():
     from hexapod_control.keyboard_teleop import V_MAX
     p = load_yaml('gait.yaml')['gait_node']['ros__parameters']
     assert V_MAX == pytest.approx(p['max_step'] / (p['duty'] * p['period']))
+
+
+def test_sensores_del_urdf_pasan_por_el_bridge(urdf_xml):
+    """Cada tópico que publica un sensor de Gazebo tiene su puente a ROS."""
+    root = ET.fromstring(urdf_xml)
+    gz_topics = {e['gz_topic_name'].lstrip('/') for e in load_yaml('gz_bridge.yaml')}
+    sensors = root.findall('.//sensor')
+    assert {s.get('type') for s in sensors} == {'camera', 'imu'}
+    for s in sensors:
+        assert s.find('topic').text in gz_topics
+    info = root.find('.//camera_info_topic').text
+    assert info in gz_topics
+
+
+def test_camara_en_marco_optico_y_focal(urdf_xml):
+    """La imagen sale en camera_optical_link y la focal es la del plan (≈ 493 px)."""
+    import math
+    cam = ET.fromstring(urdf_xml).find(".//sensor[@type='camera']")
+    assert cam.find('gz_frame_id').text == 'camera_optical_link'
+    width = float(cam.find('camera/image/width').text)
+    hfov = float(cam.find('camera/horizontal_fov').text)
+    assert (width / 2) / math.tan(hfov / 2) == pytest.approx(493, abs=1)

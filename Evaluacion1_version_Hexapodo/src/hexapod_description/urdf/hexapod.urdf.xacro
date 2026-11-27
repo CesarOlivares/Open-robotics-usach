@@ -9,8 +9,9 @@
      ├─ imu_link, camera_link ─ camera_optical_link
      └─ 6 × { coxa_servo_link, coxa ─ fémur ─ tibia ─ pie }   (18 articulaciones)
 
-  Además: ros2_control.xacro (interfaces para Gazebo) y gazebo.xacro
-  (contacto de los pies y odometría de referencia).
+  Además: ros2_control.xacro (interfaces para Gazebo), gazebo.xacro
+  (contacto de los pies y odometría de referencia) y sensors_gazebo.xacro
+  (plugins de la cámara y la IMU).
 
   Patas, en los vértices del hexágono (ángulo desde +x, antihorario):
        lf  +30°   (izquierda adelante)     rf  −30°   (derecha adelante)
@@ -33,6 +34,7 @@
   <xacro:include filename="$(find hexapod_description)/urdf/leg.xacro"/>
   <xacro:include filename="$(find hexapod_description)/urdf/ros2_control.xacro"/>
   <xacro:include filename="$(find hexapod_description)/urdf/gazebo.xacro"/>
+  <xacro:include filename="$(find hexapod_description)/urdf/sensors_gazebo.xacro"/>
 
   <xacro:hexapod_body/>
   <xacro:hexapod_components/>
@@ -54,5 +56,6 @@
 
   <xacro:hexapod_ros2_control controllers_file="$(arg controllers_file)"/>
   <xacro:hexapod_gazebo/>
+  <xacro:hexapod_sensors_gazebo/>
 
 </robot>

@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<!--
+  Plugins de Gazebo de los sensores (pautas P5 y P7). Los links y su
+  ubicación están en sensors.xacro; aquí se declara qué mide cada uno.
+
+  Los publica el sistema Sensors/Imu del mundo en tópicos de Gazebo, y
+  ros_gz_bridge los pasa a ROS 2 (config/gz_bridge.yaml de hexapod_bringup).
+
+  Cámara (Pi Camera Module 3): modelo estenopeico (pinhole).
+    HFOV 66° (hoja de la cámara, lente estándar); imagen reducida a 640 × 480
+    a 15 Hz para no cargar el PC (la real es de 12 MP). Focal en píxeles:
+        fx = (W/2) / tan(HFOV/2) = 320 / tan 33° ≈ 493 px
+  IMU (BNO085): orientación, velocidad angular y aceleración a 100 Hz. Ruido
+  gaussiano del orden de la hoja [aprox.]: giroscopio 0,005 rad/s (0,3 °/s),
+  acelerómetro 0,03 m/s².
+
+  gz_frame_id: el frame_id que llevan los mensajes. La imagen va en el marco
+  óptico (z adelante, x a la derecha, y abajo), como pide REP-103.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:property name="camera_hfov" value="${66*PI/180}"/>  <!-- [hoja] -->
+
+  <xacro:macro name="gauss" params="stddev">
+    <noise type="gaussian"><mean>0.0</mean><stddev>${stddev}</stddev></noise>
+  </xacro:macro>
+
+  <xacro:macro name="hexapod_sensors_gazebo">
+
+    <gazebo reference="camera_link">
+      <sensor name="front_camera" type="camera">
+        <always_on>true</always_on>
+        <update_rate>15</update_rate>
+        <visualize>true</visualize>
+        <topic>hexapod/camera/image</topic>
+        <gz_frame_id>camera_optical_link</gz_frame_id>
+        <camera>
+          <camera_info_topic>hexapod/camera/camera_info</camera_info_topic>
+          <horizontal_fov>${camera_hfov}</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.02</near>
+            <far>15.0</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+        </camera>
+      </sensor>
+    </gazebo>
+
+    <gazebo reference="imu_link">
+      <sensor name="body_imu" type="imu">
+        <always_on>true</always_on>
+        <update_rate>100</update_rate>
+        <topic>hexapod/imu</topic>
+        <gz_frame_id>imu_link</gz_frame_id>
+        <imu>
+          <angular_velocity>
+            <x><xacro:gauss stddev="0.005"/></x>
+            <y><xacro:gauss stddev="0.005"/></y>
+            <z><xacro:gauss stddev="0.005"/></z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x><xacro:gauss stddev="0.03"/></x>
+            <y><xacro:gauss stddev="0.03"/></y>
+            <z><xacro:gauss stddev="0.03"/></z>
+          </linear_acceleration>
+        </imu>
+      </sensor>
+    </gazebo>
+
+  </xacro:macro>
+
+</robot>
