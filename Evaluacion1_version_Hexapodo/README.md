@@ -22,6 +22,9 @@ ros2 launch hexapod_bringup bringup.launch.py     # simulación completa
 | [`docs/joystick_esp32.md`](docs/joystick_esp32.md) | Conexión y prueba del joystick con ESP32 / ESP32-S3 |
 | [`PLAN_DE_TRABAJO.md`](PLAN_DE_TRABAJO.md) y [`docs/plan/plan_ataque.pdf`](docs/plan/plan_ataque.pdf) | Plan, etapas y entregables |
 
-**Estado:** E0–E7 y E10 listas (modelo, de pie, marcha, sensores, joystick
-del lado ROS, integración, prueba en un PC limpio, guía). Pendiente: prueba
-del joystick con la placa, E8 (estudio de dimensiones) y E9 (entrega).
+**Estado:** E0–E8 y E10 listas (modelo, de pie, marcha, sensores, joystick
+del lado ROS, integración, prueba en un PC limpio, estudio de dimensiones,
+guía). Pendiente: prueba del joystick con la placa y E9 (entrega).
+
+**Cotas para fabricar** (estudio E8, [`docs/especificacion_diseno.md`](docs/especificacion_diseno.md)):
+coxa 45 mm, fémur 60 mm, tibia 115 mm (de eje a eje), radio del cuerpo 80 mm.

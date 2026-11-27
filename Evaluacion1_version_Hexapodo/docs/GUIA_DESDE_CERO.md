@@ -182,8 +182,8 @@ masa va en `body_link`, unido con una junta fija.
 ## 4. Los parámetros (`hexapod_params.xacro`)
 
 Es **la única fuente de verdad**: el URDF, la cinemática y los tests leen de
-aquí. Cada valor dice de dónde sale: [medido], [hoja], [hipótesis] o
-[provisorio] (lo reemplaza el estudio de dimensiones, E8).
+aquí. Cada valor dice de dónde sale: [medido], [hoja], [hipótesis], [provisorio] o
+[estudio E8] (sale del estudio de dimensiones: `docs/especificacion_diseno.md`).
 
 | Grupo | Variable | Valor | Origen | Para qué |
 |---|---|---|---|---|
@@ -192,15 +192,15 @@ aquí. Cada valor dice de dónde sale: [medido], [hoja], [hipótesis] o
 | | `servo_effort` | 1,08 N·m | hoja (6 V) | torque máximo: Gazebo no deja hacer más |
 | | `servo_velocity` | 7,48 rad/s | hoja (0,14 s/60°) | velocidad máxima |
 | | `servo_shaft_offset` | 10 mm | hoja aprox. | dónde está el eje dentro del servo |
-| Pata | `coxa_length` L1 | 45 mm | provisorio | eje coxa → eje fémur |
-| | `femur_length` L2 | 80 mm | provisorio | eje fémur → eje rodilla |
-| | `tibia_length` L3 | 120 mm | provisorio | eje rodilla → punta del pie |
+| Pata | `coxa_length` L1 | 45 mm | estudio E8 | eje coxa → eje fémur |
+| | `femur_length` L2 | 60 mm | estudio E8 | eje fémur → eje rodilla |
+| | `tibia_length` L3 | 115 mm | estudio E8 | eje rodilla → punta del pie |
 | | `foot_radius` | 10 mm | provisorio | esfera de contacto |
 | | `*_bracket_mass`, `tibia_mass` | 8, 10, 15 g | hipótesis | piezas que vas a fabricar |
 | Límites | `coxa_lower/upper` | ±45° | provisorio | para que patas vecinas no choquen |
 | | `femur_lower/upper` | ±90° | provisorio | |
 | | `tibia_lower/upper` | −2,5…0,6 rad | provisorio | cuánto se dobla la rodilla |
-| Cuerpo | `body_radius` R | 100 mm | provisorio | centro → eje de cada coxa |
+| Cuerpo | `body_radius` R | 80 mm | estudio E8 | centro → eje de cada coxa |
 | | `body_plate_margin` | 15 mm | provisorio | cuánto sobresale la placa del eje |
 | | `body_plate_gap` | 45 mm | del servo | espacio entre placas (cabe el servo de 42,9) |
 | | `body_structure_mass` | 200 g | hipótesis | placas |
@@ -213,11 +213,18 @@ aquí. Cada valor dice de dónde sale: [medido], [hoja], [hipótesis] o
 
 Masa total resultante: **1,876 kg** (un test lo comprueba).
 
+Los largos y el radio salieron del **estudio de dimensiones** (E8): se
+eligieron para que el fémur aguante el peso con factor de seguridad 2 en el
+peor punto del paso, que la batería quede a ≥ 60 mm del suelo, que todo
+quepa y que las patas no choquen. El por qué de cada cota está en
+[`especificacion_diseno.md`](especificacion_diseno.md). Si cambias una
+medida, `colcon test` (`test_design_study.py`) avisa si deja de cumplir.
+
 Otros parámetros, fuera del URDF, en `hexapod_bringup/config/`:
 
 | Archivo | Qué configura |
 |---|---|
-| `gait.yaml` | postura de pie (pie a 70 mm del fémur, 90 mm bajo la coxa), postura recogida, tiempos, marcha (T = 1 s, β = 0,6, h = 30 mm, paso máx. 60 mm, rampas) |
+| `gait.yaml` | postura de pie (pie a 60 mm del fémur, 100 mm bajo la coxa; estudio E8), postura recogida, tiempos, marcha (T = 1 s, β = 0,6, h = 30 mm, paso máx. 60 mm, rampas) |
 | `joystick.yaml` | zona muerta, expo, velocidades máximas, sentido de los ejes |
 | `controllers.yaml` | controladores de ros2_control y la ganancia del servo simulado |
 | `gz_bridge.yaml` | qué tópicos de Gazebo pasan a ROS |
@@ -285,6 +292,7 @@ esa lógica con los tópicos.
 | `kinematics.py` | no | Cinemática directa (ángulos → pie) e inversa (pie → ángulos) de una pata |
 | `robot_model.py` | no | Lee del URDF dónde va cada pata; pasa puntos entre el marco del cuerpo y el de la pata |
 | `gait.py` | no | Marcha trípode: dónde debe estar cada pie en cada instante |
+| `design_study.py` | no | Estudio de dimensiones: torques, alcance, choques, estabilidad, empaque |
 | `gait_node.py` | sí | Nodo: postura suave, luego marcha. Junta todo lo anterior |
 | `keyboard_teleop.py` | sí | Nodo: teclado → velocidad |
 | `joy_to_twist.py` | sí | Nodo: joystick → velocidad |
@@ -338,7 +346,7 @@ más rápido: pasos más rápidos (T menor) o patas más largas (E8).
 
 1. Espera el reloj de la simulación y el primer `/joint_states` (punto de partida).
 2. **Recoger** (1 s): interpola cada articulación hasta la postura recogida.
-3. **Parar** (2,5 s): baja los pies en línea recta (IK en cada paso). El cuerpo sube de 47,5 a 100 mm.
+3. **Parar** (2,5 s): baja los pies en línea recta (IK en cada paso). El cuerpo sube de 47,5 a 110 mm.
 4. **Marcha** (50 Hz): lee `/hexapod/cmd_vel`, avanza `gait.py`, hace la IK de las 6 patas y publica 18 ángulos.
 5. Si no llegan comandos por 0,5 s, toma velocidad 0 y se detiene.
 
@@ -455,6 +463,7 @@ que `legs_controller`, y este antes que `gait_node`.
 | `test_robot_model.py` | cambios de marco, posturas alcanzables, marcha a velocidad máxima dentro de los límites |
 | `test_gait.py` | 3 patas apoyadas, pies en el suelo, igual a las fórmulas, sin saltos, vuelve a casa |
 | `test_joy_to_twist.py` | zona muerta, expo, gradiente continuo, mapeo |
+| `test_design_study.py` | modelo de torque = Gazebo; el diseño de partida falla; **las medidas actuales cumplen todas las restricciones** |
 | `test_config_consistency.py` | nombres y órdenes iguales entre URDF y YAML, topes del teclado y joystick |
 | `test_flake8`, `test_pep257`, `test_copyright` | estilo del código |
 
@@ -477,7 +486,7 @@ Gazebo y dicen CUMPLE / NO CUMPLE.
 
 | Quiero… | Cambio | Después |
 |---|---|---|
-| Patas más largas | `coxa/femur/tibia_length` en `hexapod_params.xacro` | `colcon build` y `colcon test` (los tests de alcance avisan si la marcha ya no cabe) |
+| Patas más largas | `coxa/femur/tibia_length` en `hexapod_params.xacro` | `colcon build` y `colcon test` (los tests de alcance y `test_design_study` avisan si deja de cumplir); `python3 analysis/dimension_study.py` rehace el estudio |
 | Cuerpo más grande | `body_radius` | ídem |
 | Robot más alto o más bajo | `stand_height` en `gait.yaml` | relanzar |
 | Caminar más rápido | bajar `period` en `gait.yaml` (y subir `v_max` en `joystick.yaml` y `V_MAX` del teclado; un test exige que calcen) | `colcon test` |

@@ -152,7 +152,7 @@ def main():
     path = os.path.join(get_package_share_directory('hexapod_description'),
                         'urdf', 'hexapod.urdf.xacro')
     root = ET.fromstring(xacro.process_file(path).toxml())
-    q = standing_pose(root, 0.070, 0.090) if args.pose == 'stand' else {}
+    q = standing_pose(root, 0.060, 0.100) if args.pose == 'stand' else {}
     poses = link_poses(root, q)
 
     fig, (top, side) = plt.subplots(1, 2, figsize=(12, 5.6),
@@ -178,7 +178,7 @@ def main():
         ax.set_xlabel('x [mm]')
         ax.set_ylabel(ylab)
         ax.grid(alpha=0.25)
-    pose_txt = 'de pie (pie 70 mm afuera y 90 mm bajo el fémur)' if args.pose == 'stand' \
+    pose_txt = 'de pie (pie 60 mm afuera y 100 mm bajo el fémur)' if args.pose == 'stand' \
         else 'patas rectas'
     fig.suptitle(f'Layout del hexápodo desde el URDF — postura {pose_txt}',
                  color=NAVY, fontsize=12)

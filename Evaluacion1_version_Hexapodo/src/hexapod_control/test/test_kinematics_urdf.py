@@ -34,6 +34,22 @@ import xacro
 CHAIN = ['test_coxa_joint', 'test_femur_joint', 'test_tibia_joint', 'test_foot_joint']
 
 
+def read_params():
+    """Valores numéricos de hexapod_params.xacro (la fuente de verdad)."""
+    path = os.path.join(get_package_share_directory('hexapod_description'),
+                        'urdf', 'hexapod_params.xacro')
+    out = {}
+    for prop in ET.parse(path).getroot():
+        try:
+            out[prop.get('name')] = float(prop.get('value'))
+        except (TypeError, ValueError):
+            pass
+    return out
+
+
+PARAMS = read_params()
+
+
 @pytest.fixture(scope='module')
 def urdf_xml():
     """URDF de la pata de prueba, ya procesado por xacro."""
@@ -85,7 +101,8 @@ def foot_from_urdf(urdf_xml, angles):
 def test_geometria_leida_del_urdf(urdf_xml):
     """Los largos que lee la cinemática son los de hexapod_params.xacro."""
     g = leg_geometry_from_urdf(urdf_xml, 'test')
-    assert (g.coxa, g.femur, g.tibia) == pytest.approx((0.045, 0.080, 0.120))
+    assert (g.coxa, g.femur, g.tibia) == pytest.approx(
+        (PARAMS['coxa_length'], PARAMS['femur_length'], PARAMS['tibia_length']))
     assert g.coxa_limits == pytest.approx((-math.pi / 4, math.pi / 4))
 
 

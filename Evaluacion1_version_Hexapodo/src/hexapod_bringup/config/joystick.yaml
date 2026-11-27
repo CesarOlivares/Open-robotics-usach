@@ -12,7 +12,8 @@ joy_to_twist:
     expo: 0.5
     # Velocidades con la palanca al tope. Deben caber en un paso de la marcha
     # (gait.yaml): v_max ≤ max_step / (β T) = 0,10 m/s y
-    # w_max · β T · (radio del pie 0,215 m) ≤ max_step → w_max ≤ 0,46 rad/s.
+    # w_max · β T · (radio del pie 0,185 m) ≤ max_step → w_max ≤ 0,54 rad/s
+    # (0,45 deja margen; el test de consistencia lo comprueba).
     v_max: 0.10
     w_max: 0.45
     # ±1 según cómo quede montado el módulo: se ajusta en la prueba con la

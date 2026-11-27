@@ -23,6 +23,11 @@ from hexapod_control.robot_model import HexapodModel, LEG_NAMES
 import pytest
 import xacro
 
+# Postura de gait.yaml (E8): pie a 60 mm del fémur y 100 mm bajo la coxa;
+# recogida: 80 mm y 30 mm.
+STAND = (0.060, 0.100)
+TUCK = (0.080, 0.030)
+
 
 @pytest.fixture(scope='module')
 def model():
@@ -51,15 +56,15 @@ def test_pie_neutro_en_la_direccion_de_su_pata(model):
     """El pie neutro queda en la dirección del vértice, a R + radial."""
     for leg, p in zip(model.legs, model.neutral_feet(0.115, 0.09)):
         assert math.atan2(p[1], p[0]) == pytest.approx(leg.angle, abs=1e-9)
-        assert math.hypot(p[0], p[1]) == pytest.approx(0.100 + 0.115, abs=1e-9)
+        assert math.hypot(p[0], p[1]) == pytest.approx(math.hypot(leg.x, leg.y) + 0.115,
+                                                       abs=1e-9)
         assert p[2] == pytest.approx(-0.09)
 
 
-@pytest.mark.parametrize('radial, height', [(0.045 + 0.070, 0.090),   # de pie
-                                            (0.045 + 0.080, 0.030)])  # recogida
+@pytest.mark.parametrize('radial, height', [STAND, TUCK])
 def test_posturas_de_gait_node(model, radial, height):
     """Las posturas de gait.yaml respetan los límites y la FK devuelve el pie."""
-    feet = model.neutral_feet(radial, height)
+    feet = model.neutral_feet(model.legs[0].geom.coxa + radial, height)
     angles = model.joint_angles(feet)
     for i, leg in enumerate(model.legs):
         p = leg.leg_to_body(fk(leg.geom, angles[3 * i:3 * i + 3]))
@@ -73,7 +78,8 @@ def test_posturas_de_gait_node(model, radial, height):
 def test_marcha_siempre_alcanzable(model, v, wz):
     """A velocidad máxima en cualquier dirección, la IK nunca sale de los límites."""
     from hexapod_control.gait import TripodGait
-    gait = TripodGait(LEG_NAMES, model.neutral_feet(0.045 + 0.070, 0.090))
+    gait = TripodGait(LEG_NAMES, model.neutral_feet(model.legs[0].geom.coxa + STAND[0],
+                                                    STAND[1]))
     for _ in range(300):
         model.joint_angles(gait.update(0.02, v, wz))  # lanza UnreachableError si no
     for _ in range(100):

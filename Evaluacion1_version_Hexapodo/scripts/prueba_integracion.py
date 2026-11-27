@@ -20,7 +20,7 @@ Con bringup.launch.py corriendo, recorre toda la cadena como lo haría un
 usuario y comprueba cada punto con un criterio numérico:
 
     1. Articulaciones: /joint_states trae las 18 juntas.
-    2. Postura: el robot se para solo y queda a 100 ± 2 mm.
+    2. Postura: el robot se para solo y queda a su altura de diseño ± 2 mm.
     3. Sensores: IMU ~100 Hz, cámara ~15 Hz.
     4. Joystick (como la ESP32): palanca adelante → avanza.
     5. Joystick: palanca a la derecha → gira a la derecha.
@@ -37,14 +37,30 @@ Uso:
 """
 
 import math
+import os
 import sys
 import time
+import xml.etree.ElementTree as ET
+
+from ament_index_python.packages import get_package_share_directory
 
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 import rclpy
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import Image, Imu, JointState, Joy
+import yaml
+
+
+def expected_height():
+    """Altura de base_link de pie: stand_height (gait.yaml) + radio del pie."""
+    with open(os.path.join(get_package_share_directory('hexapod_bringup'),
+                           'config', 'gait.yaml')) as f:
+        h = yaml.safe_load(f)['gait_node']['ros__parameters']['stand_height']
+    params = ET.parse(os.path.join(get_package_share_directory('hexapod_description'),
+                                   'urdf', 'hexapod_params.xacro')).getroot()
+    r = next(float(p.get('value')) for p in params if p.get('name') == 'foot_radius')
+    return h + r
 
 
 def yaw_of(q):
@@ -135,8 +151,11 @@ def main():
         results.append(ok)
         print(f'{"CUMPLE   " if ok else "NO CUMPLE"}  {name:42s} {detail}', flush=True)
 
-    print('Esperando la simulación y que el robot se pare...', flush=True)
-    stood = p.spin_until(lambda: p.odom is not None and p.odom.pose.pose.position.z > 0.098)
+    z_ok = expected_height()
+    print(f'Esperando la simulación y que el robot se pare ({z_ok * 1000:.0f} mm)...',
+          flush=True)
+    stood = p.spin_until(lambda: p.odom is not None
+                         and p.odom.pose.pose.position.z > z_ok - 0.002)
     if not stood:
         print('NO CUMPLE  el robot no se paró en 120 s (¿está corriendo bringup.launch.py?)')
         sys.exit(1)
@@ -145,7 +164,7 @@ def main():
     check('1. /joint_states con 18 articulaciones', len(p.joints) == 18,
           f'{len(p.joints)} juntas')
     z = p.pose()[2]
-    check('2. De pie a 100 ± 2 mm', abs(z - 0.100) < 0.002, f'{z * 1000:.1f} mm')
+    check(f'2. De pie a {z_ok * 1000:.0f} ± 2 mm', abs(z - z_ok) < 0.002, f'{z * 1000:.1f} mm')
 
     for v in p.count.values():
         v.clear()
