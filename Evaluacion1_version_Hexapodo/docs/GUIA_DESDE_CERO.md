@@ -468,6 +468,8 @@ Gazebo y dicen CUMPLE / NO CUMPLE.
 | `medir_torque_tripode.py` | torque estático en 3 patas (para E8) |
 | `verificar_sensores.py` | D12–D13: frecuencias, focal, gravedad, giro de la IMU |
 | `probar_joystick.py` | D15: joystick simulado y gráfico del gradiente |
+| `prueba_integracion.py` | E7: el sistema completo en 8 puntos (juntas, postura, sensores, joystick, teclado, seguridad) |
+| `prueba_en_limpio.sh` | E7: instala y prueba el último commit en un contenedor `ros:jazzy` vacío |
 
 ---
 

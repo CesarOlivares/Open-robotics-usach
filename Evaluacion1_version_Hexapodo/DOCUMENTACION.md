@@ -485,6 +485,62 @@ nada bajo el 8 % de la palanca, después crece suave (expo) hasta el tope.
 
 ---
 
+## E7 — Integración y prueba en limpio
+
+**Objetivo:** comprobar que el sistema funciona **completo** (no pieza por
+pieza) y que funciona en **otro PC** siguiendo solo `INICIO_RAPIDO.md`.
+
+**Qué se hizo**
+
+| Archivo | Rol |
+|---|---|
+| `hexapod_bringup/launch/bringup.launch.py` | Un comando para todo (hecho en E6) |
+| `scripts/prueba_integracion.py` | Recorre la cadena completa como un usuario y evalúa 8 puntos con criterio numérico; termina con código 0 o 1 |
+| `scripts/prueba_en_limpio.sh` | Copia el **último commit** (sin `build/` ni `install/`) a un contenedor `ros:jazzy` vacío y sigue solo el inicio rápido: `./instalar.sh --test`, `display.launch.py` y `bringup.launch.py` + prueba de integración |
+| `instalar.sh` | Ahora también funciona como root (sin `sudo`), como en un contenedor o un PC recién instalado |
+| `test_config_consistency.py` | (de E3–E6) nombres, órdenes y topes iguales entre URDF y YAML |
+
+**Por qué un contenedor:** en mi PC todo funciona porque ya está instalado.
+`ros:jazzy` es Ubuntu 24.04 con ROS 2 base y **nada más** (ni Gazebo, ni
+ros2_control): si falta declarar una dependencia o un paso del instructivo,
+falla ahí. Es lo más parecido al PC del profesor.
+
+**Prueba de integración: los 8 puntos**
+
+| # | Qué prueba | Criterio | Mi PC | PC limpio |
+|---|---|---|---|---|
+| 1 | `/joint_states` | 18 articulaciones | 18 ✅ | 18 ✅ |
+| 2 | Se para solo | 100 ± 2 mm | 100,0 mm ✅ | 100,0 mm ✅ |
+| 3 | Sensores | IMU ~100 Hz, cámara ~15 Hz | 100,0 / 15,2 Hz ✅ | 100,0 / 14,7 Hz ✅ |
+| 4 | Joystick adelante, 6 s | avanza > 35 cm, desvío < 10 cm | 53,1 cm ✅ | 53,1 cm ✅ |
+| 5 | Joystick derecha, 5 s | gira > 45° a la derecha | −107° ✅ | −107° ✅ |
+| 6 | Botón + derecha, 6 s | paso lateral > 30 cm a la derecha | −51,9 cm ✅ | −51,9 cm ✅ |
+| 7 | Teclado (Twist) atrás, 5 s | retrocede > 25 cm | −34,1 cm ✅ | −34,7 cm ✅ |
+| 8 | Nadie publica | se mueve < 1 cm en 3 s | 0,1 mm ✅ | 0,0 mm ✅ |
+
+**Prueba en limpio** (commit `da8e957`, contenedor `ros:jazzy`):
+
+| Paso | Resultado |
+|---|---|
+| `./instalar.sh --test` | rosdep instaló todo, compilaron los 3 paquetes, **74/74 tests** ✅ |
+| `display.launch.py use_gui:=false` | 18 articulaciones en `/joint_states` ✅ (RViz no abre sin pantalla, es esperado) |
+| `bringup.launch.py headless:=true` + integración | **8/8 CUMPLE**; ambos controladores *active*; sin errores en el log ✅ |
+
+Los resultados coinciden con los de mi PC: la simulación es reproducible
+(la física es determinista con el mismo paso de 1 ms).
+
+**Entregables:** D17 integración completa ✅ · D18 prueba en limpio ✅.
+
+**Cómo correrlo**
+
+```bash
+ros2 launch hexapod_bringup bringup.launch.py headless:=true use_rviz:=false
+python3 scripts/prueba_integracion.py          # en otra terminal, ~1 min
+./scripts/prueba_en_limpio.sh                  # PC limpio en Docker, ~15 min
+```
+
+---
+
 ## E10 — Guía de estudio e instalación en un comando
 
 **Qué se hizo**
