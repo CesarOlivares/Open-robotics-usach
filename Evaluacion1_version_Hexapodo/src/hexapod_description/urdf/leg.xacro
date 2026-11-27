@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+<!--
+  Macro de UNA pata (3 articulaciones). El cuerpo la instancia 6 veces.
+
+    <parent> ─(1) {prefix}_coxa_joint  (eje Z)  ──► {prefix}_coxa_link
+             ─(2) {prefix}_femur_joint (eje −Y) ──► {prefix}_femur_link
+             ─(3) {prefix}_tibia_joint (eje −Y) ──► {prefix}_tibia_link
+             ─    {prefix}_foot_joint  (fija)   ──► {prefix}_foot_link (esfera de contacto)
+
+  Parámetros:
+    prefix       nombre de la pata: lf, lm, lr, rf, rm, rr
+    parent       link al que se monta (el cuerpo)
+    mount_angle  φ: ángulo del vértice del hexágono, medido desde +x del cuerpo [rad]
+    radius       R: distancia del centro del cuerpo al eje de la coxa [m]
+
+  Por qué el eje es −Y en fémur y tibia: el marco de la pata tiene x hacia
+  afuera y z hacia arriba. Un giro positivo en torno a +Y lleva x hacia −z
+  (baja la pata). Con eje −Y, un ángulo positivo SUBE el segmento, que es la
+  convención de kinematics.py (θ2 > 0 sube el fémur; θ3 < 0 baja la tibia).
+
+  Masas: el servo de la coxa va en el cuerpo; el del fémur, en el link de la
+  coxa (junto al eje del fémur); el de la tibia, en el link del fémur (en la
+  rodilla). El centro de masa de cada link es el promedio ponderado de pieza
+  y servo.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Junta revoluta con los límites del MG996R -->
+  <xacro:macro name="leg_revolute" params="name parent child axis lower upper *origin">
+    <joint name="${name}" type="revolute">
+      <parent link="${parent}"/>
+      <child link="${child}"/>
+      <xacro:insert_block name="origin"/>
+      <axis xyz="${axis}"/>
+      <limit lower="${lower}" upper="${upper}" velocity="${servo_velocity}" effort="${servo_effort}"/>
+      <dynamics damping="${joint_damping}" friction="${joint_friction}"/>
+    </joint>
+  </xacro:macro>
+
+  <!-- Caja oscura que dibuja un MG996R con su eje de salida en Y -->
+  <xacro:macro name="servo_visual" params="x">
+    <visual>
+      <origin xyz="${x} 0 0" rpy="0 0 0"/>
+      <geometry><box size="${servo_x} ${servo_z} ${servo_y}"/></geometry>
+      <material name="hexapod_dark"/>
+    </visual>
+  </xacro:macro>
+
+  <xacro:macro name="hexapod_leg" params="prefix parent mount_angle radius">
+
+    <!-- ===== (1) Coxa: gira la pata adelante/atrás ===== -->
+    <xacro:leg_revolute name="${prefix}_coxa_joint" parent="${parent}" child="${prefix}_coxa_link"
+                        axis="0 0 1" lower="${coxa_lower}" upper="${coxa_upper}">
+      <origin xyz="${radius*cos(mount_angle)} ${radius*sin(mount_angle)} 0" rpy="0 0 ${mount_angle}"/>
+    </xacro:leg_revolute>
+
+    <xacro:property name="coxa_m" value="${servo_mass + coxa_bracket_mass}"/>
+    <xacro:property name="coxa_cx" value="${(coxa_bracket_mass*coxa_length/2 + servo_mass*coxa_length) / coxa_m}"/>
+    <link name="${prefix}_coxa_link">
+      <visual>
+        <origin xyz="${coxa_length/2} 0 0" rpy="0 0 0"/>
+        <geometry><box size="${coxa_length} ${link_width} ${link_thick}"/></geometry>
+        <material name="hexapod_orange"/>
+      </visual>
+      <xacro:servo_visual x="${coxa_length}"/>
+      <xacro:box_inertial m="${coxa_m}" x="${servo_x}" y="${servo_z}" z="${servo_y}">
+        <origin xyz="${coxa_cx} 0 0" rpy="0 0 0"/>
+      </xacro:box_inertial>
+    </link>
+
+    <!-- ===== (2) Fémur: sube y baja la pata ===== -->
+    <xacro:leg_revolute name="${prefix}_femur_joint" parent="${prefix}_coxa_link" child="${prefix}_femur_link"
+                        axis="0 -1 0" lower="${femur_lower}" upper="${femur_upper}">
+      <origin xyz="${coxa_length} 0 0" rpy="0 0 0"/>
+    </xacro:leg_revolute>
+
+    <xacro:property name="femur_m" value="${servo_mass + femur_bracket_mass}"/>
+    <xacro:property name="femur_cx" value="${(femur_bracket_mass*femur_length/2 + servo_mass*femur_length) / femur_m}"/>
+    <link name="${prefix}_femur_link">
+      <visual>
+        <origin xyz="${femur_length/2} 0 0" rpy="0 0 0"/>
+        <geometry><box size="${femur_length} ${link_thick} ${link_width}"/></geometry>
+        <material name="hexapod_orange"/>
+      </visual>
+      <xacro:servo_visual x="${femur_length}"/>
+      <collision>
+        <origin xyz="${femur_length/2} 0 0" rpy="0 0 0"/>
+        <geometry><box size="${femur_length} ${link_thick} ${link_width}"/></geometry>
+      </collision>
+      <xacro:box_inertial m="${femur_m}" x="${servo_x}" y="${servo_z}" z="${servo_y}">
+        <origin xyz="${femur_cx} 0 0" rpy="0 0 0"/>
+      </xacro:box_inertial>
+    </link>
+
+    <!-- ===== (3) Tibia: la rodilla ===== -->
+    <xacro:leg_revolute name="${prefix}_tibia_joint" parent="${prefix}_femur_link" child="${prefix}_tibia_link"
+                        axis="0 -1 0" lower="${tibia_lower}" upper="${tibia_upper}">
+      <origin xyz="${femur_length} 0 0" rpy="0 0 0"/>
+    </xacro:leg_revolute>
+
+    <link name="${prefix}_tibia_link">
+      <visual>
+        <origin xyz="${tibia_length/2} 0 0" rpy="0 0 0"/>
+        <geometry><box size="${tibia_length} ${link_thick} ${link_width}"/></geometry>
+        <material name="hexapod_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="${tibia_length/2} 0 0" rpy="0 0 0"/>
+        <geometry><box size="${tibia_length - 2*foot_radius} ${link_thick} ${link_width}"/></geometry>
+      </collision>
+      <xacro:box_inertial m="${tibia_mass}" x="${tibia_length}" y="${link_thick}" z="${link_width}">
+        <origin xyz="${tibia_length/2} 0 0" rpy="0 0 0"/>
+      </xacro:box_inertial>
+    </link>
+
+    <!-- ===== Pie: esfera de contacto en la punta de la tibia ===== -->
+    <joint name="${prefix}_foot_joint" type="fixed">
+      <parent link="${prefix}_tibia_link"/>
+      <child link="${prefix}_foot_link"/>
+      <origin xyz="${tibia_length} 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <link name="${prefix}_foot_link">
+      <visual>
+        <geometry><sphere radius="${foot_radius}"/></geometry>
+        <material name="hexapod_dark"/>
+      </visual>
+      <collision>
+        <geometry><sphere radius="${foot_radius}"/></geometry>
+      </collision>
+      <!-- Masa mínima: Gazebo funde los links unidos por juntas fijas -->
+      <inertial>
+        <mass value="0.001"/>
+        <inertia ixx="1e-7" ixy="0" ixz="0" iyy="1e-7" iyz="0" izz="1e-7"/>
+      </inertial>
+    </link>
+
+  </xacro:macro>
+
+</robot>

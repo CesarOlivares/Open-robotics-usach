@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<!--
+  Parámetros del hexápodo: medidas, masas y límites.
+
+  Es el ÚNICO archivo que hay que tocar para cambiar el robot. El URDF y la
+  cinemática (hexapod_control/kinematics.py, vía robot_description) leen de
+  aquí. Unidades SI (REP-103): m, kg, rad, rad/s, N·m.
+
+  Origen de cada dato (se marca en cada línea):
+    [medido]    pesado o medido por el usuario
+    [hoja]      hoja de datos del fabricante
+    [hipótesis] estimación propia; la revisa el estudio de dimensiones (E8)
+    [provisorio] cota de partida; E8 la reemplaza por la cota ideal
+
+  Convención de la pata (marco de la coxa): x hacia afuera del cuerpo, z
+  hacia arriba. Con las 3 articulaciones en 0 la pata queda recta y
+  horizontal. θ2 > 0 sube el fémur; θ3 < 0 dobla la tibia hacia abajo.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:property name="PI" value="3.14159265359"/>
+
+  <!-- ===================== Servo MG996R ===================== -->
+  <xacro:property name="servo_mass"   value="0.055"/>   <!-- [medido] 55 g, incluye los adaptadores coaxiales -->
+  <xacro:property name="servo_x"      value="0.0407"/>  <!-- [hoja] 40,7 mm -->
+  <xacro:property name="servo_y"      value="0.0197"/>  <!-- [hoja] 19,7 mm -->
+  <xacro:property name="servo_z"      value="0.0429"/>  <!-- [hoja] 42,9 mm -->
+  <!-- [hoja] torque de bloqueo a 6 V: 11 kgf·cm = 1,08 N·m -->
+  <xacro:property name="servo_effort"   value="1.08"/>
+  <!-- [hoja] 0,14 s / 60° a 6 V  →  (π/3) / 0,14 = 7,48 rad/s -->
+  <xacro:property name="servo_velocity" value="${(PI/3) / 0.14}"/>
+  <!-- Amortiguamiento y fricción de la junta: solo los usa Gazebo [hipótesis] -->
+  <xacro:property name="joint_damping"  value="0.05"/>
+  <xacro:property name="joint_friction" value="0.01"/>
+
+  <!-- ===================== Geometría de la pata [provisorio] =====================
+       Partida para cumplir la cota estática d ≤ 8,8 cm (plan, §4.2):
+       con la postura de pie el pie queda a ~7 cm en horizontal del eje del fémur. -->
+  <xacro:property name="coxa_length"  value="0.045"/>  <!-- L1: eje coxa → eje fémur -->
+  <xacro:property name="femur_length" value="0.080"/>  <!-- L2: eje fémur → eje tibia -->
+  <xacro:property name="tibia_length" value="0.120"/>  <!-- L3: eje tibia → punta del pie -->
+  <xacro:property name="link_width"   value="0.024"/>  <!-- ancho visual de las piezas -->
+  <xacro:property name="link_thick"   value="0.004"/>  <!-- espesor de las placas -->
+  <xacro:property name="foot_radius"  value="0.010"/>  <!-- esfera de contacto -->
+
+  <!-- ===================== Masas de la pata =====================
+       Ubicación de los servos: el de la coxa va en el cuerpo, el del fémur
+       en el link de la coxa y el de la tibia en la rodilla (link del fémur). -->
+  <xacro:property name="coxa_bracket_mass"  value="0.008"/>  <!-- [hipótesis] -->
+  <xacro:property name="femur_bracket_mass" value="0.010"/>  <!-- [hipótesis] -->
+  <xacro:property name="tibia_mass"         value="0.015"/>  <!-- [hipótesis] -->
+
+  <!-- ===================== Límites articulares [provisorio] =====================
+       El MG996R gira 180°: cada recorrido cabe en π rad. E8 ajusta la coxa
+       para que patas vecinas (a 60°) no choquen. -->
+  <xacro:property name="coxa_lower"  value="${-PI/4}"/>
+  <xacro:property name="coxa_upper"  value="${PI/4}"/>
+  <xacro:property name="femur_lower" value="${-PI/2}"/>
+  <xacro:property name="femur_upper" value="${PI/2}"/>
+  <xacro:property name="tibia_lower" value="-2.5"/>
+  <xacro:property name="tibia_upper" value="0.6"/>
+
+  <!-- ===================== Cuerpo (hexágono regular) ===================== -->
+  <!-- Las patas van en los 6 vértices (±30°, ±90°, ±150°); el frente del
+       robot (+x) mira a un LADO plano, no a un vértice. -->
+  <xacro:property name="body_radius" value="0.100"/>   <!-- R: centro → eje de coxa [provisorio] -->
+  <!-- Las placas sobresalen del eje de la coxa para sujetar el servo y su
+       adaptador coaxial: radio de la placa (centro → vértice) [provisorio] -->
+  <xacro:property name="body_plate_margin" value="0.015"/>
+  <!-- Eje de salida del MG996R: a ~10 mm de un extremo del cuerpo [hoja, aprox.] -->
+  <xacro:property name="servo_shaft_offset" value="0.010"/>
+  <xacro:property name="body_plate_thick" value="0.003"/>
+  <xacro:property name="body_plate_gap"   value="0.045"/> <!-- entre placa inferior y superior -->
+  <xacro:property name="body_structure_mass" value="0.200"/> <!-- [hipótesis] placas -->
+
+  <!-- ===================== Componentes ===================== -->
+  <xacro:property name="battery_mass"   value="0.271"/>  <!-- [medido] LiPo 3S 5200 mAh -->
+  <xacro:property name="battery_x"      value="0.137"/>  <!-- [medido] 137 × 43 × 22 mm -->
+  <xacro:property name="battery_y"      value="0.043"/>
+  <xacro:property name="battery_z"      value="0.022"/>
+  <xacro:property name="raspberry_mass" value="0.086"/>  <!-- [medido] Raspberry Pi 4 -->
+  <xacro:property name="raspberry_x"    value="0.085"/>  <!-- [hoja] 85 × 56 mm -->
+  <xacro:property name="raspberry_y"    value="0.056"/>
+  <xacro:property name="raspberry_z"    value="0.017"/>
+  <xacro:property name="pca_mass"       value="0.009"/>  <!-- [medido] cada PCA9685 -->
+  <xacro:property name="pca_x"          value="0.062"/>  <!-- [hoja/STEP] 62 × 25 mm -->
+  <xacro:property name="pca_y"          value="0.025"/>
+  <xacro:property name="pca_z"          value="0.015"/>
+  <xacro:property name="wiring_mass"    value="0.100"/>  <!-- [hipótesis] cables y reguladores -->
+
+  <!-- ===================== Sensores (por comprar) ===================== -->
+  <!-- IMU BNO085 (placa tipo Adafruit 25,4 × 17,8 mm) en el centro del cuerpo -->
+  <xacro:property name="imu_mass" value="0.003"/>   <!-- [hipótesis] -->
+  <xacro:property name="imu_x"    value="0.0254"/>  <!-- [hoja] -->
+  <xacro:property name="imu_y"    value="0.0178"/>
+  <xacro:property name="imu_z"    value="0.004"/>
+  <!-- Raspberry Pi Camera Module 3 (25 × 24 × 11,5 mm) en el lado frontal -->
+  <xacro:property name="camera_mass"  value="0.004"/>   <!-- [hipótesis] -->
+  <xacro:property name="camera_x"     value="0.0115"/>  <!-- [hoja] profundidad -->
+  <xacro:property name="camera_y"     value="0.025"/>
+  <xacro:property name="camera_z"     value="0.024"/>
+  <xacro:property name="camera_pitch" value="0.17"/>    <!-- ~10° hacia el suelo [hipótesis] -->
+
+</robot>

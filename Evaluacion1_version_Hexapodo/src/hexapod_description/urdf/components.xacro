@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<!--
+  Componentes electrónicos montados en el cuerpo (layout de partida).
+
+  Cada componente es un link con su masa real y una junta fija: así su
+  posición aparece en la TF y el estudio de dimensiones (E8) puede revisar
+  el layout y el centro de masa.
+
+    battery_link     LiPo 3S, BAJO la placa inferior y con el largo hacia
+                     adelante. Es lo más pesado después de los servos:
+                     colgarla abajo baja el centro de masa.
+    raspberry_link   Raspberry Pi 4 sobre la placa superior (separadores de
+                     5 mm). En el robot real es el controlador: corre ROS 2,
+                     la marcha y los drivers. En la simulación solo aporta
+                     su masa y su lugar.
+    pca_1_link       PCA9685 (dirección 0x40): patas izquierdas.
+    pca_2_link       PCA9685 (dirección 0x41, puente A0): patas derechas.
+                     Ambas van sobre la placa inferior, entre las placas,
+                     en el centro (los servos de coxa quedan a > 69 mm).
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Caja con masa, color y junta fija a base_link -->
+  <xacro:macro name="body_component" params="name m x y z material *origin">
+    <joint name="${name}_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="${name}_link"/>
+      <xacro:insert_block name="origin"/>
+    </joint>
+    <link name="${name}_link">
+      <visual>
+        <geometry><box size="${x} ${y} ${z}"/></geometry>
+        <material name="${material}"/>
+      </visual>
+      <collision>
+        <geometry><box size="${x} ${y} ${z}"/></geometry>
+      </collision>
+      <xacro:box_inertial m="${m}" x="${x}" y="${y}" z="${z}">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:box_inertial>
+    </link>
+  </xacro:macro>
+
+  <xacro:property name="standoff" value="0.005"/>  <!-- [hipótesis] separadores de la Raspberry -->
+
+  <xacro:macro name="hexapod_components">
+
+    <xacro:body_component name="battery" m="${battery_mass}"
+                          x="${battery_x}" y="${battery_y}" z="${battery_z}" material="hexapod_blue">
+      <origin xyz="0 0 ${plate_bottom_z - battery_z/2}" rpy="0 0 0"/>
+    </xacro:body_component>
+
+    <xacro:body_component name="raspberry" m="${raspberry_mass}"
+                          x="${raspberry_x}" y="${raspberry_y}" z="${raspberry_z}" material="hexapod_green">
+      <origin xyz="0 0 ${plate_top_z + standoff + raspberry_z/2}" rpy="0 0 0"/>
+    </xacro:body_component>
+
+    <xacro:body_component name="pca_1" m="${pca_mass}"
+                          x="${pca_x}" y="${pca_y}" z="${pca_z}" material="hexapod_dark">
+      <origin xyz="0 ${pca_y/2 + 0.005} ${-body_plate_gap/2 + pca_z/2}" rpy="0 0 0"/>
+    </xacro:body_component>
+
+    <xacro:body_component name="pca_2" m="${pca_mass}"
+                          x="${pca_x}" y="${pca_y}" z="${pca_z}" material="hexapod_dark">
+      <origin xyz="0 ${-pca_y/2 - 0.005} ${-body_plate_gap/2 + pca_z/2}" rpy="0 0 0"/>
+    </xacro:body_component>
+
+  </xacro:macro>
+
+</robot>

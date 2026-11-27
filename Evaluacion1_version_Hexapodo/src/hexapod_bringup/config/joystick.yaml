@@ -1,0 +1,21 @@
+# Parámetros de joy_to_twist: joystick de la ESP32 → velocidad del hexápodo.
+#
+# La placa publica el valor continuo de cada eje en [-1, 1]; aquí se decide
+# cómo se convierte en velocidad (sin reprogramar la ESP32).
+joy_to_twist:
+  ros__parameters:
+    # Bajo este valor el eje cuenta como 0 (el potenciómetro en reposo
+    # nunca marca 0 exacto). Sobre él la salida parte de 0 sin salto.
+    deadzone: 0.08
+    # Curva expo: y = (1 − e)·x + e·x³. 0 = lineal; 0,5 = la mitad de la
+    # pendiente cerca del centro (control fino), igual 1 en el extremo.
+    expo: 0.5
+    # Velocidades con la palanca al tope. Deben caber en un paso de la marcha
+    # (gait.yaml): v_max ≤ max_step / (β T) = 0,10 m/s y
+    # w_max · β T · (radio del pie 0,215 m) ≤ max_step → w_max ≤ 0,46 rad/s.
+    v_max: 0.10
+    w_max: 0.45
+    # ±1 según cómo quede montado el módulo: se ajusta en la prueba con la
+    # placa (palanca a la derecha → debe girar a la derecha).
+    axis_x_sign: 1.0
+    axis_y_sign: 1.0

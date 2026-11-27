@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>hexapod_bringup</name>
+  <version>0.1.0</version>
+  <description>Simulación en Gazebo, ros2_control, sensores y micro-ROS del hexápodo.</description>
+  <maintainer email="228733522+CesarOlivares@users.noreply.github.com">Cesar Olivares Lavalovich</maintainer>
+  <license>Apache-2.0</license>
+
+  <!-- Modelo del robot -->
+  <exec_depend>hexapod_description</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+
+  <!-- Gazebo Harmonic y puente Gazebo <-> ROS -->
+  <exec_depend>ros_gz_sim</exec_depend>
+  <exec_depend>ros_gz_bridge</exec_depend>
+
+  <!-- ros2_control: hardware simulado y controladores -->
+  <exec_depend>gz_ros2_control</exec_depend>
+  <exec_depend>controller_manager</exec_depend>
+  <exec_depend>joint_state_broadcaster</exec_depend>
+  <exec_depend>position_controllers</exec_depend>
+  <!-- Comando "ros2 control ..." (list_controllers, etc.) usado en el README -->
+  <exec_depend>ros2controlcli</exec_depend>
+
+  <!-- Cinemática, marcha y teleoperación -->
+  <exec_depend>hexapod_control</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+
+  <!-- Scripts de evidencia (scripts/) y análisis (analysis/) del proyecto:
+       odometría, TF, gráficos y geometría -->
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+  <exec_depend>python3-scipy</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+  <!-- test_config_consistency.py: procesa el URDF y lee los YAML -->
+  <test_depend>python3-yaml</test_depend>
+  <test_depend>ament_index_python</test_depend>
+  <test_depend>xacro</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
