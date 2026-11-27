@@ -39,7 +39,7 @@ from rclpy.node import Node
 V_STEP = 0.02     # [m/s] por pulsación
 W_STEP = 0.1      # [rad/s] por pulsación
 V_MAX = 0.10      # [m/s]  = max_step / (β T) con los valores de gait.yaml
-W_MAX = 0.5       # [rad/s]
+W_MAX = 0.45      # [rad/s] (paso de giro ≤ max_step, ver joystick.yaml)
 
 # tecla → (componente, signo); componentes: 0 = vx, 1 = vy, 2 = wz
 KEYS = {

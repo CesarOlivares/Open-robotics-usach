@@ -21,6 +21,7 @@ error solo aparecería al ejecutar. Estos tests lo detectan con colcon test,
 sin abrir Gazebo.
 """
 
+import math
 import os
 import xml.etree.ElementTree as ET
 
@@ -109,9 +110,21 @@ def test_sensores_del_urdf_pasan_por_el_bridge(urdf_xml):
 
 def test_camara_en_marco_optico_y_focal(urdf_xml):
     """La imagen sale en camera_optical_link y la focal es la del plan (≈ 493 px)."""
-    import math
     cam = ET.fromstring(urdf_xml).find(".//sensor[@type='camera']")
     assert cam.find('gz_frame_id').text == 'camera_optical_link'
     width = float(cam.find('camera/image/width').text)
     hfov = float(cam.find('camera/horizontal_fov').text)
     assert (width / 2) / math.tan(hfov / 2) == pytest.approx(493, abs=1)
+
+
+def test_joystick_cabe_en_un_paso(urdf_xml):
+    """Con la palanca al tope, ningún paso de la marcha supera max_step."""
+    j = load_yaml('joystick.yaml')['joy_to_twist']['ros__parameters']
+    g = load_yaml('gait.yaml')['gait_node']['ros__parameters']
+    model = HexapodModel(urdf_xml)
+    l1 = model.legs[0].geom.coxa
+    reach = max(math.hypot(p[0], p[1])
+                for p in model.neutral_feet(l1 + g['stand_radial'], g['stand_height']))
+    bt = g['duty'] * g['period']
+    assert j['v_max'] * bt <= g['max_step'] + 1e-9
+    assert j['w_max'] * bt * reach <= g['max_step'] + 1e-9

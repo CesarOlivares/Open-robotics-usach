@@ -396,3 +396,89 @@ ros2 launch hexapod_bringup gazebo.launch.py     # RViz muestra la imagen
 ros2 topic hz /hexapod/imu
 python3 scripts/verificar_sensores.py
 ```
+
+---
+
+## E6 — micro-ROS: joystick con ESP32
+
+Estado: **todo listo del lado ROS y firmware; falta solo la prueba con la
+placa** (ESP32 o ESP32-S3 y el módulo joystick aún no se compran). Guía de
+conexión, carga y prueba con hardware: [`docs/joystick_esp32.md`](docs/joystick_esp32.md).
+
+**Conceptos**
+
+- **micro-ROS:** ROS 2 para microcontroladores. La placa no puede correr
+  DDS. Habla XRCE-DDS (liviano) por USB serial con el **agente**
+  (`micro_ros_agent`) en el PC, que la presenta al resto de ROS 2 como un
+  nodo más (`/hexapod_joystick`).
+- **sensor_msgs/Joy:** mensaje estándar para mandos: `axes` (valores
+  continuos en [-1, 1]) y `buttons` (0/1).
+- **Control proporcional y suave:** el joystick entrega todo el gradiente de
+  la palanca, no solo "adelante/atrás". `joy_to_twist` lo convierte en
+  velocidad proporcional en tres pasos:
+  1. **Zona muerta con reescalado** (d = 0,08): x' = signo(x)·(|x| − d)/(1 − d).
+     Bajo d vale 0, porque el potenciómetro suelto nunca marca 0 exacto. Sobre
+     d parte de 0 sin salto y llega a 1 en el tope.
+  2. **Curva expo** (e = 0,5): y = (1 − e)·x' + e·x'³. Cerca del centro la
+     pendiente es la mitad (control fino); en el tope sigue siendo 1.
+  3. **Escala:** v = y·v_max. Después, la **rampa** de la marcha (0,4 m/s²)
+     suaviza los cambios bruscos de la palanca.
+
+**Mapeo** (un joystick de 2 ejes y botón):
+
+| Entrada | Efecto |
+|---|---|
+| Eje Y (arriba/abajo) | Avance vx, hasta ±0,10 m/s |
+| Eje X (derecha/izquierda) | Giro wz, hasta ∓0,45 rad/s (derecha = gira a la derecha) |
+| Botón (apretar la palanca) | Cambia el eje X entre **giro** y **paso lateral** (vy) |
+
+**Por qué estas velocidades máximas** (respuesta a "¿10 cm/s quedó por ser
+la más estable?"): no se eligió por estabilidad, es el **tope geométrico de
+la marcha**. Un pie apoyado recorre Δ = βT·v por paso y no puede pasar de
+`max_step` = 60 mm sin salir del alcance de la pata:
+v_max = max_step / (βT) = 0,06 / (0,6 × 1 s) = 0,10 m/s. Para girar, el pie
+más lejano (a 0,215 m del centro) recorre βT·ω·0,215 ≤ 0,06 → ω ≤ 0,46 rad/s.
+Para ir más rápido hay que dar pasos más rápidos (T menor) o más largos
+(patas más largas): es una de las preguntas del estudio de dimensiones (E8).
+Un test comprueba que `joystick.yaml` y el teclado respetan este tope.
+
+**Seguridad:** si la placa se desconecta, `joy_to_twist` deja de publicar y
+`gait_node` se detiene solo a los 0,5 s (`cmd_timeout`).
+
+**Qué se hizo**
+
+| Archivo | Rol |
+|---|---|
+| `firmware/hexapod_joystick/hexapod_joystick.ino` | Firmware (de Octavius): lee 2 ejes y botón, publica Joy a 20 Hz. Pines según placa: ESP32 (34, 35, 32) o S3 (1, 2, 4) |
+| `firmware/platformio.ini` | Compila el mismo `.ino` para ESP32-S3 o ESP32 con `micro_ros_platformio` |
+| `hexapod_control/joy_to_twist.py` | Joy → Twist con zona muerta, expo y modo giro/lateral |
+| `hexapod_bringup/config/joystick.yaml` | Zona muerta, expo, velocidades máximas y sentido de cada eje |
+| `hexapod_bringup/launch/microros_agent.launch.py` | Agente micro-ROS nativo o en Docker (de Octavius) |
+| `hexapod_bringup/launch/bringup.launch.py` | Todo junto: Gazebo + control + `joy_to_twist` (+ agente si `use_microros:=true`) |
+| `scripts/probar_joystick.py` | Evidencia D15: joystick simulado y gráfico del gradiente |
+| `instalar.sh` | Instalación y compilación en un comando |
+
+**Evidencia**
+
+| Entregable | Comprobación | Resultado |
+|---|---|---|
+| D14 `joy_to_twist` con test | `test_joy_to_twist.py`: zona muerta, expo, gradiente continuo y creciente (2001 puntos, sin saltos > 0,003), mapeo, signos, ejes faltantes | ✅ |
+| D15 el robot se mueve con el tópico | `scripts/probar_joystick.py`: palanca de 0 al tope en 20 s, 6 s al tope, se suelta | ✅ avanza 114 cm; al tope pide 10,0 y logra 9,1 cm/s; al soltar pide 0 |
+| D16 firmware compilado | `arduino-cli`, ESP32 Dev Module, núcleo 2.0.2, micro_ros_arduino 2.0.8-jazzy | ✅ 0 errores, 0 advertencias; 30 % de programa, 13 % de RAM |
+| D16 (S3) | PlatformIO `-e esp32s3` (espressif32 6.9.0, micro_ros_platformio jazzy) en un contenedor Docker | ✅ compila y genera `firmware.bin`; 12,8 % de RAM, 10,7 % de flash |
+
+![Gradiente del joystick](docs/img/joystick_gradiente.png)
+
+La velocidad real (azul) sigue a la pedida (naranja) en todo el recorrido:
+nada bajo el 8 % de la palanca, después crece suave (expo) hasta el tope.
+
+**Puntos por tratar**
+
+- **Pequeño retroceso al detenerse.** Al frenar, el cuerpo se detiene en
+  ~0,4 s, pero según en qué momento del paso se suelte, retrocede después
+  entre 1 y 7,5 mm (medido con `/hexapod/cmd_vel`) y hasta 24 mm en la
+  prueba del joystick, mientras los pies vuelven a su posición neutra. No
+  afecta la marcha, pero es un detalle a pulir: por ejemplo, volver a casa
+  más lento o solo con los pies que quedaron lejos.
+- El sentido de cada eje depende de cómo quede montado el módulo: se
+  corrige con `axis_x_sign` / `axis_y_sign` en la prueba con hardware.

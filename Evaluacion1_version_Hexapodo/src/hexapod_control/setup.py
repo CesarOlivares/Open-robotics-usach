@@ -47,6 +47,7 @@ setup(
         'console_scripts': [
             'gait_node = hexapod_control.gait_node:main',
             'keyboard_teleop = hexapod_control.keyboard_teleop:main',
+            'joy_to_twist = hexapod_control.joy_to_twist:main',
         ],
     },
 )
