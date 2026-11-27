@@ -453,7 +453,7 @@ que `legs_controller`, y este antes que `gait_node`.
 
 ## 12. Pruebas y evidencias
 
-**Tests automáticos** (`colcon test`, 74 hoy): se corren sin abrir Gazebo.
+**Tests automáticos** (`colcon test`, 80 hoy): se corren sin abrir Gazebo.
 
 | Archivo | Qué comprueba |
 |---|---|

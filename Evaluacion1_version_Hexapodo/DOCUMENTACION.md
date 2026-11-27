@@ -2,11 +2,21 @@
 
 Registro de lo que se hizo en cada etapa, por qué y cómo se comprueba. Sirve
 para estudiar y para armar la presentación. Las etapas son registro: el
-trabajo es continuo. El plan completo está en `docs/plan/plan_ataque.pdf`.
+trabajo es continuo. El plan completo está en `docs/plan/plan_ataque.pdf` y
+el informe técnico con todo el proyecto, en `docs/informe/informe.pdf`.
 
 Convención de origen de los datos, igual que en `hexapod_params.xacro`:
-**[medido]** por el usuario · **[hoja]** hoja de datos · **[hipótesis]**
-estimación propia · **[provisorio]** cota de partida que E8 reemplaza.
+**[medido]** por el autor · **[hoja]** hoja de datos · **[hipótesis]**
+estimación propia · **[provisorio]** cota de partida · **[estudio E8]**
+resultado del estudio de dimensiones.
+
+> **Diseño de partida y diseño final.** Las etapas E0–E7 se hicieron con el
+> diseño de partida (coxa 45, fémur 80, tibia 120 mm; radio del cuerpo
+> 100 mm; pie de pie a 70 mm del fémur y 90 mm bajo la coxa). Los números de
+> esas secciones corresponden a él. El estudio de dimensiones (E8) lo
+> reemplazó por coxa 45, fémur 60, tibia 115 mm y radio 80 mm, y repitió las
+> pruebas en Gazebo (ver E8). Las figuras de `docs/img/` se generan con el
+> modelo actual, así que muestran el diseño final.
 
 ---
 
@@ -128,7 +138,7 @@ derecha, y abajo), que es la que esperan las imágenes.
 | D7 masa | Suma de masas del URDF = **1,876 kg** (plan: 1,87 ± 0,05) | ✅ |
 | Equilibrio | Centro de masa a < 5 mm del eje vertical | ✅ |
 
-Figura de layout generada desde el URDF (`analysis/plot_layout.py`):
+Figura de layout generada desde el URDF (`analysis/plot_layout.py`; hoy muestra el diseño final de E8):
 
 ![Layout](docs/img/layout.png)
 
@@ -226,7 +236,9 @@ postura de pie.** Primero recoger, después bajar los pies.
 
 De pie, la tibia casi no trabaja porque el pie queda bajo la rodilla. El
 pico es al levantar el cuerpo. La marcha (E4) apoya en 3 patas y no en 6,
-así que hay que medir de nuevo ahí.
+así que hay que medir de nuevo ahí. *(En E4 se vio que los picos con las
+patas en movimiento son un efecto del modo posición del simulador; el valor
+de pie, en cambio, es confiable: ver E4 y E8.)*
 
 **Cómo verlo**
 
@@ -295,7 +307,7 @@ Detalles de diseño:
 
 | Entregable | Comprobación | Resultado |
 |---|---|---|
-| D10 camina con teclado | `keyboard_teleop` + video (lo graba el usuario) | Avanza, retrocede, va de lado y gira en ambos sentidos (medido) |
+| D10 camina con teclado | `keyboard_teleop`, probado por el autor en la simulación con interfaz gráfica | ✅ avanza, retrocede, va de lado y gira en ambos sentidos |
 | D11 velocidad ≈ pedida | `scripts/medir_marcha.py`, 10 s simulados por prueba tras 2 s de arranque | ✅ ver tabla |
 | Marcha correcta sin ROS | `test_gait.py` (10 tests): siempre 3 patas apoyadas con β = 0,5, pies apoyados en el suelo, igual a las fórmulas del plan, sin saltos al cambiar la velocidad, vuelve a casa al soltar | ✅ |
 | Marcha alcanzable | `test_robot_model.py`: 8 combinaciones a velocidad máxima, 6 s cada una, sin salir de los límites articulares | ✅ |
@@ -432,12 +444,14 @@ conexión, carga y prueba con hardware: [`docs/joystick_esp32.md`](docs/joystick
 | Eje X (derecha/izquierda) | Giro wz, hasta ∓0,45 rad/s (derecha = gira a la derecha) |
 | Botón (apretar la palanca) | Cambia el eje X entre **giro** y **paso lateral** (vy) |
 
-**Por qué estas velocidades máximas** (respuesta a "¿10 cm/s quedó por ser
-la más estable?"): no se eligió por estabilidad, es el **tope geométrico de
-la marcha**. Un pie apoyado recorre Δ = βT·v por paso y no puede pasar de
+**Por qué estas velocidades máximas** (¿se eligió 10 cm/s por ser la más
+estable?): no se eligió por estabilidad, es el **tope geométrico de la
+marcha**. Un pie apoyado recorre Δ = βT·v por paso y no puede pasar de
 `max_step` = 60 mm sin salir del alcance de la pata:
 v_max = max_step / (βT) = 0,06 / (0,6 × 1 s) = 0,10 m/s. Para girar, el pie
-más lejano (a 0,215 m del centro) recorre βT·ω·0,215 ≤ 0,06 → ω ≤ 0,46 rad/s.
+más lejano (a 0,215 m del centro con el diseño de partida; 0,185 m con el
+final) recorre βT·ω·r ≤ 0,06 → ω ≤ 0,46 rad/s (0,54 con el diseño final).
+Se usa 0,45 rad/s, que cumple con ambos.
 Para ir más rápido hay que dar pasos más rápidos (T menor) o más largos
 (patas más largas): es una de las preguntas del estudio de dimensiones (E8).
 Un test comprueba que `joystick.yaml` y el teclado respetan este tope.
