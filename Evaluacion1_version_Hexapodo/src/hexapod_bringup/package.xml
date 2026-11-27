@@ -34,6 +34,15 @@
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
 
+  <!-- Scripts de evidencia (scripts/) y análisis (analysis/) del proyecto:
+       odometría, TF, gráficos y geometría -->
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+  <exec_depend>python3-scipy</exec_depend>
+
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>
@@ -41,6 +50,7 @@
   <!-- test_config_consistency.py: procesa el URDF y lee los YAML -->
   <test_depend>python3-yaml</test_depend>
   <test_depend>ament_index_python</test_depend>
+  <test_depend>xacro</test_depend>
 
   <export>
     <build_type>ament_python</build_type>

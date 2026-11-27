@@ -482,3 +482,27 @@ nada bajo el 8 % de la palanca, después crece suave (expo) hasta el tope.
   más lento o solo con los pies que quedaron lejos.
 - El sentido de cada eje depende de cómo quede montado el módulo: se
   corrige con `axis_x_sign` / `axis_y_sign` en la prueba con hardware.
+
+---
+
+## E10 — Guía de estudio e instalación en un comando
+
+**Qué se hizo**
+
+| Archivo | Para qué |
+|---|---|
+| [`docs/GUIA_DESDE_CERO.md`](docs/GUIA_DESDE_CERO.md) | Aprender el proyecto desde cero: piezas de ROS 2, los 3 paquetes y por qué, URDF/xacro archivo por archivo, tabla de todas las variables, árbol TF, ros2_control, cinemática y marcha, mapa de nodos y tópicos, sensores, micro-ROS, launch, pruebas, recetas para cambiar cosas, glosario |
+| [`INICIO_RAPIDO.md`](INICIO_RAPIDO.md) | Instalar, ejecutar y comprobar en 5 minutos; problemas comunes |
+| `instalar.sh` | Un comando: instala `rosdep` y `colcon`, instala las dependencias de los `package.xml` y compila (`--test` corre además los tests) |
+
+**Por qué un script y no el `setup.py`:** el `setup.py` de un paquete Python
+solo dice qué archivos propios se instalan (nodos, launch, config). Las
+dependencias del sistema (Gazebo, ros2_control, numpy…) se **declaran** en
+cada `package.xml` y las **instala** `rosdep`. El script junta esos pasos.
+
+Para que funcione en otro PC, cada dependencia tiene que estar declarada. Se
+revisaron todos los `import` de nodos, launch, scripts y análisis contra los
+`package.xml`. Faltaban `nav_msgs`, `tf2_ros`, `numpy`, `matplotlib` y
+`scipy` (los usan los scripts de evidencia), y se agregaron a
+`hexapod_bringup`. `rosdep check` responde *All system dependencies have been
+satisfied*. La prueba en un PC limpio (contenedor `ros:jazzy`) es parte de E7.

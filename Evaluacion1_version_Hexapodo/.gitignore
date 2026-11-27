@@ -27,3 +27,4 @@ docs/plan/*.aux
 docs/plan/*.log
 docs/plan/*.out
 docs/plan/*.toc
+.pytest_cache/

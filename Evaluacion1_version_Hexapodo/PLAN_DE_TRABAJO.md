@@ -289,21 +289,10 @@ El detalle de cada etapa está en [`docs/plan/plan_ataque.pdf`](docs/plan/plan_a
 | **E7** — Integración y pruebas | `bringup.launch.py`, tests, prueba en limpio | sáb 28 | R10, R11 |
 | **E8** — Estudio de dimensiones | Barrido de L1, L2, L3, R; gráficos; cotas ideales; verificación de torques en Gazebo (bajo la línea de corte) | dom 29 | aporte propio |
 | **E9** — Documentación y entrega | Sección por etapa al cerrarla; tutorial, Beamer, `.zip` | cada cierre + dom 29 | R12–R14 |
+| **E10** — Guía de estudio | `docs/GUIA_DESDE_CERO.md` (paquetes, nodos, tópicos, xacro, variables, desde cero) e `INICIO_RAPIDO.md`; instalación en un comando (`instalar.sh`) | sáb 28 | R12, R13 |
 
 El estudio de dimensiones **no bloquea** el modelo: E0 parte con la cota estática de §4.3 y E8 la reemplaza por las cotas finales.
 
----|---|---|
-| **0** — Workspace y datos | 3 paquetes que compilan; `hexapod_params.xacro` con los datos de §1; leer el CAD del bracket coaxial | `colcon build` OK |
-| **1** — Cinemática de una pata | `kinematics.py` + test IK↔FK; macro de pata en RViz (3 sliders) | Test pasa; RViz coincide con FK |
-| **2** — Estudio de dimensiones | `dimension_study.py`, gráficos y primera versión de las cotas ideales | Largos y radio elegidos con todas las restricciones de §4.2 cumplidas |
-| **3** — Hexápodo en RViz | Cuerpo hexagonal, 6 patas, componentes y sensores en el URDF; 18 sliders | R2–R5 |
-| **4** — De pie en Gazebo ⚠️ | Base flotante, fricción, `ros2_control`, postura inicial suave | Se sostiene ≥ 60 s; R6 |
-| **5** — Caminar con teclado | `gait.py`, `gait_node`, `keyboard_teleop` | Avanza, retrocede y gira; R8 |
-| **6** — Sensores | IMU + cámara publicando y visibles en RViz | R5, R7 |
-| **7** — Verificación de dimensiones | Torques medidos en Gazebo durante la marcha vs. torque de diseño; ajustar cotas si hace falta; `especificacion_diseno.md` | Margen ≥ 2 en todas las articulaciones |
-| **8** — Integración y calidad | `bringup.launch.py`, tests, prueba en limpio en contenedor | R10, R11, R14 |
-| **9** — micro-ROS *(última prioridad)* | Paquete y tópico `/hexapod/joystick` + `joy_to_twist` listos desde la Fase 5. Firmware ESP32 escrito y compilado. Prueba real **cuando se compre la ESP32** | R9 |
-| **10** — Documentación y presentación | `DOCUMENTACION.md`, tutorial `.docx/.pdf`, Beamer | R12, R13 |
 
 ---
 

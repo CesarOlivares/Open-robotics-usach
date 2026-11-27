@@ -6,4 +6,22 @@ Hexápodo de 18 articulaciones (MG996R) con cuerpo hexagonal regular, modelado e
 
 > La entrega oficial de la Evaluación 1 es el brazo Octavius ([`../Evaluacion_1/`](../Evaluacion_1/)). Este proyecto cumple la misma pauta con un robot con patas. Todo es simulado; el robot real queda fuera de alcance.
 
-**Estado:** planificación. Ver [`PLAN_DE_TRABAJO.md`](PLAN_DE_TRABAJO.md).
+## Empezar
+
+```bash
+./instalar.sh                                     # dependencias + compilación, un comando
+source install/setup.bash
+ros2 launch hexapod_bringup bringup.launch.py     # simulación completa
+```
+
+| Documento | Para qué |
+|---|---|
+| [`INICIO_RAPIDO.md`](INICIO_RAPIDO.md) | Instalar, ejecutar y comprobar en 5 minutos |
+| [`docs/GUIA_DESDE_CERO.md`](docs/GUIA_DESDE_CERO.md) | Aprender el proyecto desde cero: paquetes, nodos, tópicos, xacro, variables |
+| [`DOCUMENTACION.md`](DOCUMENTACION.md) | Registro de cada etapa: qué se hizo, por qué, problemas y evidencia medida |
+| [`docs/joystick_esp32.md`](docs/joystick_esp32.md) | Conexión y prueba del joystick con ESP32 / ESP32-S3 |
+| [`PLAN_DE_TRABAJO.md`](PLAN_DE_TRABAJO.md) y [`docs/plan/plan_ataque.pdf`](docs/plan/plan_ataque.pdf) | Plan, etapas y entregables |
+
+**Estado:** E0–E6 y E10 listas (modelo, de pie, marcha, sensores, joystick
+del lado ROS, guía). Pendiente: prueba del joystick con la placa, E7
+(integración y prueba en limpio), E8 (estudio de dimensiones) y E9 (entrega).
