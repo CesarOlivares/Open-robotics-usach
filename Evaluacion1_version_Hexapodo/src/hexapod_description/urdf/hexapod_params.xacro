@@ -33,12 +33,13 @@
   <xacro:property name="joint_damping"  value="0.05"/>
   <xacro:property name="joint_friction" value="0.01"/>
 
-  <!-- ===================== Geometría de la pata [provisorio] =====================
-       Partida para cumplir la cota estática d ≤ 8,8 cm (plan, §4.2):
-       con la postura de pie el pie queda a ~7 cm en horizontal del eje del fémur. -->
-  <xacro:property name="coxa_length"  value="0.045"/>  <!-- L1: eje coxa → eje fémur -->
-  <xacro:property name="femur_length" value="0.080"/>  <!-- L2: eje fémur → eje tibia -->
-  <xacro:property name="tibia_length" value="0.120"/>  <!-- L3: eje tibia → punta del pie -->
+  <!-- ===================== Geometría de la pata [estudio E8] =====================
+       Resultado del estudio de dimensiones (analysis/dimension_study.py,
+       docs/especificacion_diseno.md). Partida E0–E7: 45 / 80 / 120 mm, que
+       pasaba el torque de diseño del fémur en el extremo del paso. -->
+  <xacro:property name="coxa_length"  value="0.045"/>  <!-- L1: eje coxa → eje fémur (≥ 40,3 por el servo) -->
+  <xacro:property name="femur_length" value="0.060"/>  <!-- L2: eje fémur → eje tibia (≥ 45,7: 2 servos) -->
+  <xacro:property name="tibia_length" value="0.115"/>  <!-- L3: eje tibia → punta del pie -->
   <xacro:property name="link_width"   value="0.024"/>  <!-- ancho visual de las piezas -->
   <xacro:property name="link_thick"   value="0.004"/>  <!-- espesor de las placas -->
   <xacro:property name="foot_radius"  value="0.010"/>  <!-- esfera de contacto -->
@@ -63,7 +64,7 @@
   <!-- ===================== Cuerpo (hexágono regular) ===================== -->
   <!-- Las patas van en los 6 vértices (±30°, ±90°, ±150°); el frente del
        robot (+x) mira a un LADO plano, no a un vértice. -->
-  <xacro:property name="body_radius" value="0.100"/>   <!-- R: centro → eje de coxa [provisorio] -->
+  <xacro:property name="body_radius" value="0.080"/>   <!-- R: centro → eje de coxa [estudio E8: ≥ 79 mm por batería y PCA] -->
   <!-- Las placas sobresalen del eje de la coxa para sujetar el servo y su
        adaptador coaxial: radio de la placa (centro → vértice) [provisorio] -->
   <xacro:property name="body_plate_margin" value="0.015"/>

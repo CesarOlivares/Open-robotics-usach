@@ -1,0 +1,129 @@
+{
+  "elegido": {
+    "L1": 0.045,
+    "L2": 0.06,
+    "L3": 0.115,
+    "R": 0.08,
+    "d": 0.06,
+    "H": 0.1
+  },
+  "restricciones": {
+    "alcance [m]": [
+      0.022963759529262884,
+      0.0,
+      true
+    ],
+    "margen a los topes [rad]": [
+      0.24709047691922903,
+      0.1,
+      true
+    ],
+    "rodilla sobre el fémur [m]": [
+      0.010751041103288284,
+      0.0,
+      true
+    ],
+    "torque fémur [N·m]": [
+      0.5055146652582556,
+      0.54,
+      true
+    ],
+    "torque tibia [N·m]": [
+      0.18741009807605952,
+      0.54,
+      true
+    ],
+    "altura libre [m]": [
+      0.0625,
+      0.06,
+      true
+    ],
+    "estabilidad [m]": [
+      0.0625,
+      0.04,
+      true
+    ],
+    "pies vecinos [m]": [
+      0.125,
+      0.03,
+      true
+    ],
+    "servos vecinos [m]": [
+      0.017811624526242076,
+      0.005,
+      true
+    ],
+    "batería cabe [m]": [
+      0.008772413359521659,
+      0.0,
+      true
+    ],
+    "electrónica cabe [m]": [
+      0.0011606907797540216,
+      0.0,
+      true
+    ],
+    "L1 ≥ servo [m]": [
+      0.004650000000000001,
+      0.0,
+      true
+    ],
+    "L2 ≥ 2 servos [m]": [
+      0.0143,
+      0.0,
+      true
+    ]
+  },
+  "fs_torque": 2.1364365353243575,
+  "holgura": 1.0751041103288284,
+  "sensibilidad_fs": {
+    "servos a 4,8 V (0,92 N·m)": 1.8199274189800083,
+    "piezas de la pata +50 %": 2.166131978647311,
+    "robot +200 g (más estructura)": 1.913622397464982
+  },
+  "requisitos": {
+    "stride": 0.06,
+    "swing_height": 0.03,
+    "clearance": 0.06,
+    "safety_factor": 2.0,
+    "stability_min": 0.04,
+    "feet_gap_min": 0.03,
+    "servo_gap_min": 0.005,
+    "reach_max": 0.9,
+    "limit_margin": 0.1,
+    "coxa_limit": 0.7853981633974483,
+    "femur_limits": [
+      -1.5707963267948966,
+      1.5707963267948966
+    ],
+    "tibia_limits": [
+      -2.5,
+      0.6
+    ]
+  },
+  "componentes": {
+    "servo_mass": 0.055,
+    "servo_x": 0.0407,
+    "servo_y": 0.0197,
+    "servo_z": 0.0429,
+    "servo_shaft_offset": 0.01,
+    "servo_stall": 1.08,
+    "battery": [
+      0.137,
+      0.043,
+      0.022
+    ],
+    "pca": [
+      0.062,
+      0.025,
+      0.015
+    ],
+    "plate_margin": 0.015,
+    "battery_below_base": 0.0475,
+    "foot_radius": 0.01,
+    "total_mass": 1.876,
+    "femur_bracket_mass": 0.01,
+    "tibia_mass": 0.015,
+    "foot_mass": 0.001
+  }
+}

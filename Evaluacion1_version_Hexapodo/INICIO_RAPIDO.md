@@ -43,7 +43,14 @@ solo. Después ya obedece al teclado o al joystick.
 
 ## 3. Comprobar que todo funciona
 
-Con la simulación corriendo, en otra terminal:
+**Todo de una vez** (con `bringup.launch.py` corriendo, ~1 min): recorre la
+cadena completa y dice CUMPLE / NO CUMPLE en 8 puntos.
+
+```bash
+python3 scripts/prueba_integracion.py
+```
+
+Pruebas por separado, con la simulación corriendo, en otra terminal:
 
 ```bash
 python3 scripts/medir_postura.py --segundos 60    # de pie y estable
@@ -53,6 +60,8 @@ python3 scripts/probar_joystick.py                # joystick simulado (usar brin
 ```
 
 Tests sin simulación: `colcon test && colcon test-result --verbose`.
+
+Prueba en un PC limpio (Docker, ~15 min): `./scripts/prueba_en_limpio.sh`.
 
 ## 4. Mapa en 30 segundos
 

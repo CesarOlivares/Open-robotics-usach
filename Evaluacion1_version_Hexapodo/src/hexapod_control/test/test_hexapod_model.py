@@ -33,7 +33,24 @@ import pytest
 import xacro
 
 LEGS = {'lf': 30, 'lm': 90, 'lr': 150, 'rf': -30, 'rm': -90, 'rr': -150}
-BODY_RADIUS = 0.100
+
+
+def read_params():
+    """Valores numéricos de hexapod_params.xacro (la fuente de verdad)."""
+    path = os.path.join(get_package_share_directory('hexapod_description'),
+                        'urdf', 'hexapod_params.xacro')
+    out = {}
+    for prop in ET.parse(path).getroot():
+        try:
+            out[prop.get('name')] = float(prop.get('value'))
+        except (TypeError, ValueError):
+            pass
+    return out
+
+
+PARAMS = read_params()
+BODY_RADIUS = PARAMS['body_radius']
+LENGTHS = (PARAMS['coxa_length'], PARAMS['femur_length'], PARAMS['tibia_length'])
 
 
 @pytest.fixture(scope='module')
@@ -126,7 +143,7 @@ def test_cada_pata_igual_a_la_cinematica(root, prefix):
     """El pie de cada pata (patas rectas) está donde dice fk() + montaje."""
     urdf_xml = ET.tostring(root, encoding='unicode')
     g = leg_geometry_from_urdf(urdf_xml, prefix)
-    assert (g.coxa, g.femur, g.tibia) == pytest.approx((0.045, 0.080, 0.120))
+    assert (g.coxa, g.femur, g.tibia) == pytest.approx(LENGTHS)
     foot_local = np.array(list(fk(g, (0.0, 0.0, 0.0))) + [1.0])
     coxa = link_poses(root)[f'{prefix}_coxa_link']
     phi = math.radians(LEGS[prefix])

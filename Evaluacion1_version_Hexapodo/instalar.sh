@@ -16,6 +16,10 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# Como root (p. ej. en un contenedor) no hace falta sudo, y puede no existir.
+SUDO="sudo"
+[ "$(id -u)" -eq 0 ] && SUDO=""
+
 if [ ! -f /opt/ros/jazzy/setup.bash ]; then
   echo "No se encontró ROS 2 Jazzy en /opt/ros/jazzy."
   echo "Instálalo primero: https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html"
@@ -27,12 +31,12 @@ source /opt/ros/jazzy/setup.bash
 set -u
 
 echo "== 1/4 Herramientas: rosdep y colcon =="
-sudo apt-get update
-sudo apt-get install -y python3-rosdep python3-colcon-common-extensions
+$SUDO apt-get update
+DEBIAN_FRONTEND=noninteractive $SUDO apt-get install -y python3-rosdep python3-colcon-common-extensions
 
 echo "== 2/4 Base de datos de rosdep =="
 if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then
-  sudo rosdep init
+  $SUDO rosdep init
 fi
 rosdep update
 

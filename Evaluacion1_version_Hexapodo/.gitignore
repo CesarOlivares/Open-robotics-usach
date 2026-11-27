@@ -28,3 +28,11 @@ docs/plan/*.log
 docs/plan/*.out
 docs/plan/*.toc
 .pytest_cache/
+
+# Auxiliares de LaTeX del informe
+docs/informe/*.aux
+docs/informe/*.log
+docs/informe/*.out
+docs/informe/*.toc
+docs/informe/*.xdv
+docs/informe/*.synctex.gz

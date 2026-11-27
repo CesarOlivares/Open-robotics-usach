@@ -8,7 +8,7 @@
 | Ubicación | `~/Open_robotics/Evaluacion1_version_Hexapodo/` |
 | Relación con la entrega oficial | **Proyecto paralelo.** La entrega oficial de la Evaluación 1 sigue siendo el brazo Octavius (`Evaluacion_1/`, que no se modifica) |
 
-> Documento para revisión **antes** de programar. Cuando esté aprobado, se ejecuta fase por fase.
+> Plan aprobado al inicio y ejecutado etapa por etapa. Se mantiene como registro, con el estado de cada etapa al día (§6). Lo que se hizo y se midió en cada etapa está en [`DOCUMENTACION.md`](DOCUMENTACION.md); el informe técnico, en [`docs/informe/informe.pdf`](docs/informe/informe.pdf).
 
 ---
 
@@ -67,8 +67,8 @@ La construcción y puesta en marcha del robot real quedan fuera de este proyecto
 | 18 × **MG996R** (modificados con eje coaxial) | Masa 55 g; cuerpo 40,7 × 19,7 × 42,9 mm. Torque de bloqueo 9,4 kgf·cm a 4,8 V y 11 kgf·cm a 6 V. Velocidad 0,17 s/60° a 4,8 V y 0,14 s/60° a 6 V | Hoja de datos (Tower Pro) |
 | **Raspberry Pi 4** | 85 × 56 × ~17 mm (masa en la fila de masas medidas) | Hoja de datos (Raspberry Pi Ltd.) |
 | **2 × PCA9685** (16 canales c/u: 9 servos por lado) | Placa de ~62 × 25 mm, ~9 g c/u | Hoja de datos (Adafruit) |
-| **LiPo 3S 5200 mAh 60C** | **271 g**; medidas L × A × H ❓ | Pesada por el usuario |
-| Masas medidas | MG996R modificado **55 g** (¿incluye adaptadores? ❓) · Raspberry Pi 4 **86 g** · PCA9685 **9 g** | Pesadas por el usuario |
+| **LiPo 3S 5200 mAh 60C** | **271 g**; 137 × 43 × 22 mm | Medida por el usuario |
+| Masas medidas | MG996R modificado **55 g** (incluye los adaptadores coaxiales) · Raspberry Pi 4 **86 g** · PCA9685 **9 g** | Pesadas por el usuario |
 | Adaptadores coaxiales MG996R | A: 49 × 69 × 20 mm · B: 40 × 49 × 20 mm (*supuesto: son los adaptadores reales del eje coaxial*) | `MG996R_adapter-A/B.STEP` (repo `Hexodo_test`) |
 
 > Las piezas estructurales del repositorio (`base_hexapodo`, `BICEP`, `PATA_1`, `Tapa superior`) **no se usan**: se diseñaron a ojo. Las cotas de la estructura salen del estudio de dimensiones (§4).
@@ -112,9 +112,9 @@ Notas para cuando se compren (no afectan la simulación):
 | R9 | Conectividad y control con micro-ROS | **ESP32 + joystick → micro-ROS → mueve al hexápodo en la simulación** (como Octavius). La ESP32 aún no se compra: paquete, tópico y firmware quedan listos y se prueba publicando el tópico a mano (§3.6) | Con la ESP32: el joystick hace caminar al robot |
 | R10 | Todo con un launchfile | `bringup.launch.py` con argumentos | Un comando |
 | R11 | Estructura de carpetas | Estándar ROS 2 (§5) | Revisión |
-| R12 | Presentación PDF + editable, ≤ 15 min | Plantilla Beamer USACH de Octavius | Checklist §8 |
-| R13 | Tutorial PDF + editable | `DOCUMENTACION.md` → `.docx` + `.pdf` | Checklist §8 |
-| R14 | Entrega `.zip` | `make_release.sh` adaptado | Descomprimir y compilar en limpio |
+| R12 | Presentación PDF + editable, ≤ 15 min | Plantilla Beamer USACH de Octavius (pendiente, E9) | Checklist §8 |
+| R13 | Tutorial PDF + editable | Informe técnico (`docs/informe/`, LaTeX + PDF), `GUIA_DESDE_CERO.md` e `INICIO_RAPIDO.md` | Checklist §8 |
+| R14 | Entrega reproducible | `instalar.sh` (un comando) y `scripts/prueba_en_limpio.sh` (PC limpio en Docker); `.zip` pendiente | Prueba en limpio: 8/8 |
 
 > ⚠️ **R9 depende de comprar la ESP32 antes de la presentación.** Sin ella, el código queda completo y se demuestra con el tópico simulado, pero la pauta pide la conectividad real con micro-ROS. La misma ESP32 con su joystick sirve también para cerrar la Fase 4 de Octavius.
 
@@ -126,8 +126,8 @@ Notas para cuando se compren (no afectan la simulación):
 
 - El cuerpo es un **hexágono regular** (todos los lados y ángulos iguales, sin alargarlo) y su placa queda **horizontal**.
 - Las 6 patas salen de los **6 vértices**.
-- Para que haya 3 patas por lado, simétricas, el robot mira hacia una **arista**. Así, las patas quedan a ±30° (delanteras), ±90° (medias) y ±150° (traseras) del eje de avance.
-- La cámara va centrada en la arista frontal.
+- Para que haya 3 patas por lado, simétricas, el robot mira hacia un **lado plano** del hexágono. Así, las patas quedan a ±30° (delanteras), ±90° (medias) y ±150° (traseras) del eje de avance.
+- La cámara va centrada en el lado frontal.
 
 ```
               frente (cámara)
@@ -142,15 +142,16 @@ Notas para cuando se compren (no afectan la simulación):
 ### 3.2 Árbol cinemático
 
 ```
-base_footprint
-└── base_link (cuerpo hexagonal, base flotante)
-    ├── imu_link, camera_link → camera_optical_link
-    ├── raspberry_link, pca9685_left_link, pca9685_right_link, battery_link   (fijos, con masa)
-    └── ×6 patas {lf, lm, lr, rf, rm, rr}
-        └── {leg}_coxa_joint (Z) → coxa_link
-            └── {leg}_femur_joint (horizontal) → femur_link
-                └── {leg}_tibia_joint (horizontal) → tibia_link
-                    └── {leg}_foot_link (esfera de contacto)
+base_link (centro del cuerpo, sin masa; en Gazebo es la base flotante)
+├── body_link (placas + cableado)
+├── imu_link, camera_link → camera_optical_link
+├── raspberry_link, pca_1_link, pca_2_link, battery_link   (fijos, con masa)
+└── ×6 patas {lf, lm, lr, rf, rm, rr}
+    ├── {leg}_coxa_servo_link (servo de la coxa, fijo al cuerpo)
+    └── {leg}_coxa_joint (eje Z) → {leg}_coxa_link
+        └── {leg}_femur_joint (eje −Y) → {leg}_femur_link
+            └── {leg}_tibia_joint (eje −Y) → {leg}_tibia_link
+                └── {leg}_foot_joint (fija) → {leg}_foot_link (esfera de contacto)
 ```
 
 ### 3.3 Decisiones de modelado
@@ -215,7 +216,7 @@ ros2 topic pub -r 20 /hexapod/joystick sensor_msgs/msg/Joy "{axes: [0.0, 0.5]}"
 | Criterio | Qué se exige |
 |---|---|
 | **Torque estático** | Torque en el fémur (el más cargado) ≤ torque de diseño, con 3 patas sosteniendo todo el peso |
-| **Torque dinámico** | El mismo criterio, medido en Gazebo durante la marcha (`gz_ros2_control` expone el esfuerzo de cada articulación) |
+| **Torque dinámico** | El mismo criterio, medido en Gazebo durante la marcha. *Resultado (E4): no es confiable, porque en modo posición `gz_ros2_control` satura el torque de las patas apoyadas. Se usa el modelo estático, validado contra Gazebo con el robot quieto en 3 patas.* |
 | **Espacio de trabajo** | El pie alcanza el paso deseado sin salirse de los límites articulares |
 | **Altura libre** | El cuerpo queda a una altura mínima del suelo |
 | **Sin choques** | Patas vecinas (60° entre sí) no se tocan en ningún punto del ciclo |
@@ -238,16 +239,18 @@ Esto ya limita bastante la geometría: patas largas y abiertas no son viables co
 
 ### 4.4 Método y resultado
 
-1. Script `dimension_study.py` (sin ROS, con tests):
+1. Modelo `hexapod_control/design_study.py` (sin ROS, con tests) y script `analysis/dimension_study.py`:
    - barre combinaciones de largos y de radio del cuerpo;
    - aplica las restricciones de §4.2;
    - genera gráficos (mapa de torque vs. largos, espacio de trabajo, margen de estabilidad).
 2. La mejor combinación se escribe en `hexapod_params.xacro`.
-3. **Se verifica en Gazebo:** se mide el torque durante la marcha y se compara con el estático.
+3. **Se verifica en Gazebo:** torque estático en 3 patas (modelo = Gazebo al milésimo), de pie, marcha e integración con las cotas nuevas.
 4. Entregable **`docs/especificacion_diseno.md`**:
    - tabla de cotas para maquinar (largos de eje a eje y radio del hexágono);
    - posición de cada componente sobre el cuerpo;
    - márgenes obtenidos.
+
+**Resultado (E8):** coxa 45 mm, fémur 60 mm, tibia 115 mm, radio del cuerpo 80 mm; postura de pie con el pie a 60 mm del fémur y 100 mm bajo la coxa. Factor de seguridad del fémur 2,14 y altura libre 62,5 mm. Detalle en [`docs/especificacion_diseno.md`](docs/especificacion_diseno.md).
 
 ---
 
@@ -255,57 +258,58 @@ Esto ya limita bastante la geometría: patas largas y abiertas no son viables co
 
 ```
 Evaluacion1_version_Hexapodo/
-├── README.md · PLAN_DE_TRABAJO.md · DOCUMENTACION.md
+├── README.md · INICIO_RAPIDO.md · PLAN_DE_TRABAJO.md · DOCUMENTACION.md · instalar.sh
 ├── src/
-│   ├── hexapod_description/        modelo: urdf/ (hexapod.urdf.xacro, hexapod_params.xacro ★,
-│   │                               leg.xacro, body.xacro, components.xacro, sensors.xacro,
-│   │                               ros2_control.xacro, macros/), rviz/, launch/display.launch.py
-│   ├── hexapod_control/            cerebro: kinematics.py, gait.py (sin ROS, testeables),
-│   │                               gait_node.py, keyboard_teleop.py, joy_to_twist.py, config/, test/
-│   └── hexapod_bringup/            launch/ (gazebo, microros_agent, bringup), config/
-│                                   (controllers.yaml, gz_bridge.yaml, *.rviz), worlds/
-├── analysis/                       dimension_study.py, sus tests y figuras
-├── firmware/hexapod_joystick/      ESP32 + micro_ros_arduino (a partir del de Octavius)
-├── docs/                           especificacion_diseno.md, img/
-├── presentacion/                   Beamer USACH
-└── scripts/                        make_release.sh, clean_room_test.sh
+│   ├── hexapod_description/   modelo: urdf/ (hexapod.urdf.xacro, hexapod_params.xacro ★, leg.xacro,
+│   │                          body.xacro, components.xacro, sensors.xacro, ros2_control.xacro,
+│   │                          gazebo.xacro, sensors_gazebo.xacro, macros/), rviz/, launch/display.launch.py
+│   ├── hexapod_control/       cerebro: kinematics.py, robot_model.py, gait.py, design_study.py (sin ROS,
+│   │                          con tests); gait_node.py, keyboard_teleop.py, joy_to_twist.py; test/
+│   └── hexapod_bringup/       launch/ (gazebo, bringup, microros_agent), config/ (controllers, gait,
+│                              joystick, gz_bridge, bringup.rviz), worlds/, test/
+├── analysis/                  dimension_study.py, plot_layout.py, figuras_informe.py
+├── firmware/                  hexapod_joystick/ (ESP32 y ESP32-S3) y platformio.ini
+├── docs/                      GUIA_DESDE_CERO.md, especificacion_diseno.md, joystick_esp32.md,
+│                              informe/ (LaTeX + PDF), plan/ (plan de ataque), img/
+└── scripts/                   mediciones en Gazebo (medir_*, verificar_sensores, probar_joystick,
+                               registrar_subida), prueba_integracion.py, prueba_en_limpio.sh
 ```
 
 ---
 
 ## 6. Etapas y cronograma
 
-El detalle de cada etapa está en [`docs/plan/plan_ataque.pdf`](docs/plan/plan_ataque.pdf): qué hay que entender, ecuaciones, tareas, entregables con evidencia y qué mostrar en la presentación. Las fechas suponen entrega el **domingo 29 nov 2026** (por confirmar).
+El detalle de cada etapa está en [`docs/plan/plan_ataque.pdf`](docs/plan/plan_ataque.pdf): qué hay que entender, ecuaciones, tareas, entregables con evidencia y qué mostrar en la presentación. El calendario suponía entrega el domingo 29 de noviembre de 2026.
 
-| Etapa | Contenido | Cuándo | Pauta |
+| Etapa | Contenido | Pauta | Estado |
 |---|---|---|---|
-| **E0** — Workspace y parámetros | 3 paquetes; `hexapod_params.xacro` con masas reales y cota inicial d ≤ 8,8 cm | jue 26 noche | R1, R11 |
-| **E1** — Cinemática de una pata | `kinematics.py` (FK/IK) + test; macro de pata en RViz | jue 26 – vie 27 | base de R8 |
-| **E2** — Modelo completo en RViz | Cuerpo hexagonal, 6 patas, componentes, sensores; 18 sliders | vie 27 | R2–R5 |
-| **E3** — De pie en Gazebo ⚠️ | Base flotante, contacto, `ros2_control`, postura suave | vie 27 | R6 |
-| **E4** — Marcha trípode y teclado | `gait.py`, `gait_node`, `keyboard_teleop` | sáb 28 | R8 |
-| **E5** — Sensores | IMU + cámara | sáb 28 | R5, R7 |
-| **E6** — micro-ROS | `joy_to_twist`, tópico `/hexapod/joystick`, firmware compilado; prueba real al comprar la ESP32 | sáb 28 | R9 |
-| **E7** — Integración y pruebas | `bringup.launch.py`, tests, prueba en limpio | sáb 28 | R10, R11 |
-| **E8** — Estudio de dimensiones | Barrido de L1, L2, L3, R; gráficos; cotas ideales; verificación de torques en Gazebo (bajo la línea de corte) | dom 29 | aporte propio |
-| **E9** — Documentación y entrega | Sección por etapa al cerrarla; tutorial, Beamer, `.zip` | cada cierre + dom 29 | R12–R14 |
-| **E10** — Guía de estudio | `docs/GUIA_DESDE_CERO.md` (paquetes, nodos, tópicos, xacro, variables, desde cero) e `INICIO_RAPIDO.md`; instalación en un comando (`instalar.sh`) | sáb 28 | R12, R13 |
+| **E0** — Workspace y parámetros | 3 paquetes; `hexapod_params.xacro` con masas reales y cota inicial d ≤ 8,8 cm | R1, R11 | ✅ |
+| **E1** — Cinemática de una pata | `kinematics.py` (FK/IK) + test; macro de pata en RViz | base de R8 | ✅ |
+| **E2** — Modelo completo en RViz | Cuerpo hexagonal, 6 patas, componentes, sensores; 18 sliders | R2–R5 | ✅ |
+| **E3** — De pie en Gazebo | Base flotante, contacto, `ros2_control`, postura suave | R6 | ✅ |
+| **E4** — Marcha trípode y teclado | `gait.py`, `gait_node`, `keyboard_teleop` | R8 | ✅ |
+| **E5** — Sensores | IMU + cámara | R5, R7 | ✅ |
+| **E6** — micro-ROS | `joy_to_twist`, tópico `/hexapod/joystick`, firmware para ESP32 y ESP32-S3 compilado | R9 | ✅ software · ⏳ prueba con la placa |
+| **E7** — Integración y pruebas | `bringup.launch.py`, prueba de integración (8/8), prueba en un PC limpio | R10, R11, R14 | ✅ |
+| **E8** — Estudio de dimensiones | Barrido de L1, L2, L3, R; gráficos; cotas ideales; verificación en Gazebo | aporte propio | ✅ |
+| **E9** — Documentación y entrega | Informe técnico ✅ (`docs/informe/`); presentación y `.zip` pendientes | R12–R14 | 🟡 |
+| **E10** — Guía de estudio | `docs/GUIA_DESDE_CERO.md`, `INICIO_RAPIDO.md`; instalación en un comando (`instalar.sh`) | R13 | ✅ |
 
 El estudio de dimensiones **no bloquea** el modelo: E0 parte con la cota estática de §4.3 y E8 la reemplaza por las cotas finales.
 
 
 ---
 
-## 7. Lo que falta para partir
+## 7. Datos de partida
 
-| Dato | Bloquea | Estado |
-|---|---|---|
-| Modelos CAD | — | ✅ recibidos (`Hexodo_test-main.zip`); se usan solo los adaptadores coaxiales |
-| Masas de batería, Raspberry, servo y PCA9685 | — | ✅ |
-| Medidas de la batería (137 × 43 × 22 mm); los 55 g del servo incluyen los adaptadores | — | ✅ |
-| Fecha y hora exactas de entrega | Calendario | ❓ (supuesto: domingo 29 nov 2026) |
-| Requisitos propios: altura libre mínima, largo de paso deseado (si no hay, se proponen valores típicos) | Fase 2 | ❓ opcional |
-| ESP32 + joystick | Solo la prueba final de la Fase 9 | Por comprar |
+| Dato | Estado |
+|---|---|
+| Modelos CAD | ✅ recibidos (`Hexodo_test-main.zip`); se usan solo los adaptadores coaxiales |
+| Masas de batería, Raspberry, servo y PCA9685 | ✅ |
+| Medidas de la batería (137 × 43 × 22 mm); los 55 g del servo incluyen los adaptadores | ✅ |
+| Requisitos propios: altura libre mínima y largo de paso | ✅ se propusieron 60 mm y 60 mm (estudio E8) |
+| Fecha y hora exactas de entrega | ❓ (supuesto: domingo 29 nov 2026) |
+| ESP32 o ESP32-S3 + módulo joystick | ⏳ por comprar; solo falta la prueba con la placa (D17) |
 
 ---
 
@@ -340,7 +344,7 @@ Contenido propio:
   - Los servos **nunca** van directo a la 3S (11,1–12,6 V). Se usan 2–3 reguladores UBEC/buck de 10–20 A a 6 V, cada uno para un grupo de patas.
   - La potencia va por cables gruesos y no por las pistas del PCA9685.
   - La Raspberry va con su propio regulador de 5 V y 3 A, con tierra común.
-  - El dimensionamiento final de los reguladores se hace con los torques de la Fase 7.
+  - El dimensionamiento final de los reguladores se hace con los torques del estudio de dimensiones (E8).
 - **Seguridad de la LiPo:** fusible, interruptor general y alarma de voltaje por celda (mínimo 3,3 V/celda).
 - **Control en el robot real:** la Raspberry Pi 4 corre el mismo `hexapod_control` de la simulación y envía los ángulos a los PCA9685 por I2C. Cada servo necesita una tabla de calibración con su offset, su signo y su rango de pulso.
 - **Puesta en marcha por etapas:**

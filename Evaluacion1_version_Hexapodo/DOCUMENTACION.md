@@ -2,11 +2,21 @@
 
 Registro de lo que se hizo en cada etapa, por qué y cómo se comprueba. Sirve
 para estudiar y para armar la presentación. Las etapas son registro: el
-trabajo es continuo. El plan completo está en `docs/plan/plan_ataque.pdf`.
+trabajo es continuo. El plan completo está en `docs/plan/plan_ataque.pdf` y
+el informe técnico con todo el proyecto, en `docs/informe/informe.pdf`.
 
 Convención de origen de los datos, igual que en `hexapod_params.xacro`:
-**[medido]** por el usuario · **[hoja]** hoja de datos · **[hipótesis]**
-estimación propia · **[provisorio]** cota de partida que E8 reemplaza.
+**[medido]** por el autor · **[hoja]** hoja de datos · **[hipótesis]**
+estimación propia · **[provisorio]** cota de partida · **[estudio E8]**
+resultado del estudio de dimensiones.
+
+> **Diseño de partida y diseño final.** Las etapas E0–E7 se hicieron con el
+> diseño de partida (coxa 45, fémur 80, tibia 120 mm; radio del cuerpo
+> 100 mm; pie de pie a 70 mm del fémur y 90 mm bajo la coxa). Los números de
+> esas secciones corresponden a él. El estudio de dimensiones (E8) lo
+> reemplazó por coxa 45, fémur 60, tibia 115 mm y radio 80 mm, y repitió las
+> pruebas en Gazebo (ver E8). Las figuras de `docs/img/` se generan con el
+> modelo actual, así que muestran el diseño final.
 
 ---
 
@@ -128,7 +138,7 @@ derecha, y abajo), que es la que esperan las imágenes.
 | D7 masa | Suma de masas del URDF = **1,876 kg** (plan: 1,87 ± 0,05) | ✅ |
 | Equilibrio | Centro de masa a < 5 mm del eje vertical | ✅ |
 
-Figura de layout generada desde el URDF (`analysis/plot_layout.py`):
+Figura de layout generada desde el URDF (`analysis/plot_layout.py`; hoy muestra el diseño final de E8):
 
 ![Layout](docs/img/layout.png)
 
@@ -226,7 +236,9 @@ postura de pie.** Primero recoger, después bajar los pies.
 
 De pie, la tibia casi no trabaja porque el pie queda bajo la rodilla. El
 pico es al levantar el cuerpo. La marcha (E4) apoya en 3 patas y no en 6,
-así que hay que medir de nuevo ahí.
+así que hay que medir de nuevo ahí. *(En E4 se vio que los picos con las
+patas en movimiento son un efecto del modo posición del simulador; el valor
+de pie, en cambio, es confiable: ver E4 y E8.)*
 
 **Cómo verlo**
 
@@ -295,7 +307,7 @@ Detalles de diseño:
 
 | Entregable | Comprobación | Resultado |
 |---|---|---|
-| D10 camina con teclado | `keyboard_teleop` + video (lo graba el usuario) | Avanza, retrocede, va de lado y gira en ambos sentidos (medido) |
+| D10 camina con teclado | `keyboard_teleop`, probado por el autor en la simulación con interfaz gráfica | ✅ avanza, retrocede, va de lado y gira en ambos sentidos |
 | D11 velocidad ≈ pedida | `scripts/medir_marcha.py`, 10 s simulados por prueba tras 2 s de arranque | ✅ ver tabla |
 | Marcha correcta sin ROS | `test_gait.py` (10 tests): siempre 3 patas apoyadas con β = 0,5, pies apoyados en el suelo, igual a las fórmulas del plan, sin saltos al cambiar la velocidad, vuelve a casa al soltar | ✅ |
 | Marcha alcanzable | `test_robot_model.py`: 8 combinaciones a velocidad máxima, 6 s cada una, sin salir de los límites articulares | ✅ |
@@ -432,12 +444,14 @@ conexión, carga y prueba con hardware: [`docs/joystick_esp32.md`](docs/joystick
 | Eje X (derecha/izquierda) | Giro wz, hasta ∓0,45 rad/s (derecha = gira a la derecha) |
 | Botón (apretar la palanca) | Cambia el eje X entre **giro** y **paso lateral** (vy) |
 
-**Por qué estas velocidades máximas** (respuesta a "¿10 cm/s quedó por ser
-la más estable?"): no se eligió por estabilidad, es el **tope geométrico de
-la marcha**. Un pie apoyado recorre Δ = βT·v por paso y no puede pasar de
+**Por qué estas velocidades máximas** (¿se eligió 10 cm/s por ser la más
+estable?): no se eligió por estabilidad, es el **tope geométrico de la
+marcha**. Un pie apoyado recorre Δ = βT·v por paso y no puede pasar de
 `max_step` = 60 mm sin salir del alcance de la pata:
 v_max = max_step / (βT) = 0,06 / (0,6 × 1 s) = 0,10 m/s. Para girar, el pie
-más lejano (a 0,215 m del centro) recorre βT·ω·0,215 ≤ 0,06 → ω ≤ 0,46 rad/s.
+más lejano (a 0,215 m del centro con el diseño de partida; 0,185 m con el
+final) recorre βT·ω·r ≤ 0,06 → ω ≤ 0,46 rad/s (0,54 con el diseño final).
+Se usa 0,45 rad/s, que cumple con ambos.
 Para ir más rápido hay que dar pasos más rápidos (T menor) o más largos
 (patas más largas): es una de las preguntas del estudio de dimensiones (E8).
 Un test comprueba que `joystick.yaml` y el teclado respetan este tope.
@@ -482,6 +496,176 @@ nada bajo el 8 % de la palanca, después crece suave (expo) hasta el tope.
   más lento o solo con los pies que quedaron lejos.
 - El sentido de cada eje depende de cómo quede montado el módulo: se
   corrige con `axis_x_sign` / `axis_y_sign` en la prueba con hardware.
+
+---
+
+## E7 — Integración y prueba en limpio
+
+**Objetivo:** comprobar que el sistema funciona **completo** (no pieza por
+pieza) y que funciona en **otro PC** siguiendo solo `INICIO_RAPIDO.md`.
+
+**Qué se hizo**
+
+| Archivo | Rol |
+|---|---|
+| `hexapod_bringup/launch/bringup.launch.py` | Un comando para todo (hecho en E6) |
+| `scripts/prueba_integracion.py` | Recorre la cadena completa como un usuario y evalúa 8 puntos con criterio numérico; termina con código 0 o 1 |
+| `scripts/prueba_en_limpio.sh` | Copia el **último commit** (sin `build/` ni `install/`) a un contenedor `ros:jazzy` vacío y sigue solo el inicio rápido: `./instalar.sh --test`, `display.launch.py` y `bringup.launch.py` + prueba de integración |
+| `instalar.sh` | Ahora también funciona como root (sin `sudo`), como en un contenedor o un PC recién instalado |
+| `test_config_consistency.py` | (de E3–E6) nombres, órdenes y topes iguales entre URDF y YAML |
+
+**Por qué un contenedor:** en mi PC todo funciona porque ya está instalado.
+`ros:jazzy` es Ubuntu 24.04 con ROS 2 base y **nada más** (ni Gazebo, ni
+ros2_control): si falta declarar una dependencia o un paso del instructivo,
+falla ahí. Es lo más parecido al PC del profesor.
+
+**Prueba de integración: los 8 puntos**
+
+| # | Qué prueba | Criterio | Mi PC | PC limpio |
+|---|---|---|---|---|
+| 1 | `/joint_states` | 18 articulaciones | 18 ✅ | 18 ✅ |
+| 2 | Se para solo | 100 ± 2 mm | 100,0 mm ✅ | 100,0 mm ✅ |
+| 3 | Sensores | IMU ~100 Hz, cámara ~15 Hz | 100,0 / 15,2 Hz ✅ | 100,0 / 14,7 Hz ✅ |
+| 4 | Joystick adelante, 6 s | avanza > 35 cm, desvío < 10 cm | 53,1 cm ✅ | 53,1 cm ✅ |
+| 5 | Joystick derecha, 5 s | gira > 45° a la derecha | −107° ✅ | −107° ✅ |
+| 6 | Botón + derecha, 6 s | paso lateral > 30 cm a la derecha | −51,9 cm ✅ | −51,9 cm ✅ |
+| 7 | Teclado (Twist) atrás, 5 s | retrocede > 25 cm | −34,1 cm ✅ | −34,7 cm ✅ |
+| 8 | Nadie publica | se mueve < 1 cm en 3 s | 0,1 mm ✅ | 0,0 mm ✅ |
+
+**Prueba en limpio** (commit `da8e957`, contenedor `ros:jazzy`):
+
+| Paso | Resultado |
+|---|---|
+| `./instalar.sh --test` | rosdep instaló todo, compilaron los 3 paquetes, **74/74 tests** ✅ |
+| `display.launch.py use_gui:=false` | 18 articulaciones en `/joint_states` ✅ (RViz no abre sin pantalla, es esperado) |
+| `bringup.launch.py headless:=true` + integración | **8/8 CUMPLE**; ambos controladores *active*; sin errores en el log ✅ |
+
+Los resultados coinciden con los de mi PC: la simulación es reproducible
+(la física es determinista con el mismo paso de 1 ms).
+
+**Entregables:** D18 un comando levanta todo ✅ · D19 tests pasan (74/74, también en el PC limpio) ✅. Además: prueba de integración 8/8 y prueba en limpio. (D17, el joystick con la ESP32 real, espera la placa.)
+
+**Cómo correrlo**
+
+```bash
+ros2 launch hexapod_bringup bringup.launch.py headless:=true use_rviz:=false
+python3 scripts/prueba_integracion.py          # en otra terminal, ~1 min
+./scripts/prueba_en_limpio.sh                  # PC limpio en Docker, ~15 min
+```
+
+---
+
+## E8 — Estudio de dimensiones (aporte propio)
+
+**Pregunta:** con 18 MG996R, la LiPo 3S y la electrónica dada, ¿qué largos
+L1, L2, L3 y qué radio R permiten caminar con margen de torque, sin choques,
+con altura libre y de forma estable?
+
+> Las etapas E2–E7 se hicieron con el **diseño de partida** (45 / 80 / 120 mm,
+> R = 100 mm) y sus mediciones corresponden a él. E8 lo reemplaza; las
+> pruebas de Gazebo se repitieron con el diseño nuevo (tabla final).
+
+**Requisitos** (lo que se le pide al robot):
+
+| Requisito | Valor | Por qué |
+|---|---|---|
+| Paso S | 60 mm | 0,10 m/s con la marcha actual (T = 1 s, β = 0,6) |
+| Altura de vuelo h | 30 mm | pasar obstáculos chicos |
+| Altura libre bajo la batería | ≥ 60 mm | propuesta del plan |
+| Factor de seguridad del torque | ≥ 2 | los MG996R reales, sobre todo las copias, rinden menos que la hoja |
+| Margen de estabilidad | ≥ 40 mm | el centro de masa lejos del borde del trípode |
+| Pies vecinos / servos vecinos | ≥ 30 mm / ≥ 5 mm | sin choques |
+| Pata sin estirar del todo | D ≤ 0,9 (L2 + L3) | lejos de la singularidad de la pata recta |
+| Distancia a los topes | ≥ 0,1 rad | no trabajar contra el tope del servo |
+| Rodilla sobre el eje del fémur en el apoyo | ≥ 0 | postura de araña: el servo de la rodilla no roza el suelo y la tibia trabaja vertical |
+
+**Modelo de carga** (`hexapod_control/design_study.py`): en la marcha trípode
+3 patas sostienen todo: F = M g / 3 = 6,13 N por pie. El torque del fémur es
+F × (distancia horizontal fémur → pie) menos el peso propio de la pata; el
+de la tibia, F × (distancia horizontal rodilla → pie). El peor punto es el
+pie en el extremo exterior del paso: d + S/2. **El modelo se validó contra
+Gazebo** (robot quieto en 3 patas, `medir_torque_tripode.py`): coincide al
+milésimo en los tres puntos medidos (tabla de la especificación).
+
+**Método en 4 pasos** (`analysis/dimension_study.py`):
+
+1. **Empaque → L1 y R mínimos.** El servo del fémur no debe tocar la placa:
+   L1 ≥ 15 + 20,35 + 5 = 40,3 mm → **L1 = 45 mm** (+4 mm para el rodamiento
+   del adaptador coaxial). La batería (137 × 43) debe caber bajo el hexágono y
+   las PCA9685 no deben tocar los servos de coxa: **R ≥ 79 mm → R = 80 mm**.
+   El fémur lleva 2 servos uno tras otro: L2 ≥ 45,7 mm.
+2. **Altura → H.** Batería a ≥ 60 mm del suelo: H ≥ 97,5 mm → **H = 100 mm**.
+3. **Torque contra estabilidad → d.** Abrir la pata (d mayor) da estabilidad y
+   holgura, pero cuesta torque en el fémur. El fémur fija el máximo:
+
+   ![Torque vs d](docs/img/estudio_torque_vs_d.png)
+
+4. **Alcance → L2 y L3.** Para cada d se barren L2 = 45…120 mm y L3 =
+   80…200 mm (cada 5 mm) con la IK real y los límites articulares. De los que
+   cumplen todo, se elige el **centro de la región**: el de mayor holgura
+   mínima en alcance, rodilla y topes, medida en tolerancias de fabricación
+   (10 mm, 0,1 rad). Un diseño en el borde deja de cumplir con el primer
+   error de fabricación.
+
+   | d [mm] | cumplen | centro (L2, L3) | FS torque | holgura | estabilidad |
+   |---|---|---|---|---|---|
+   | 40 | 0 | — | — | — | — |
+   | 45 | 10 | (50, 110) | 2,56 | 0,43 | 55 mm |
+   | 50 | 20 | (60, 115) | 2,43 | 0,77 | 57 mm |
+   | 55 | 33 | (55, 115) | 2,26 | 1,03 | 60 mm |
+   | **60** | **41** | **(60, 115)** | **2,14** | **1,08** | **62 mm** |
+   | 65 | 50 | (75, 120) | 2,05 | 1,31 | 65 mm |
+   | 70 | 12 | (105, 125) | 2,01 | 0,69 | 68 mm |
+
+   Se elige **d = 60 mm**: la mayor con FS ≥ 2,1 (margen para la masa real
+   de piezas que aún no existen) y holgura ≥ 1 (tolera 10 mm de error).
+
+   ![Mapa de largos](docs/img/estudio_mapa_largos.png)
+
+**Resultado: L1 = 45, L2 = 60, L3 = 115, R = 80 mm** (postura d = 60,
+H = 100 mm). En la postura neutra la tibia queda **vertical** (a 1°): de
+pie casi no hace torque (0,012 N·m).
+
+![Pata elegida](docs/img/estudio_pata.png)
+
+| | Diseño de partida | Diseño E8 |
+|---|---|---|
+| L1 / L2 / L3 | 45 / 80 / 120 mm | 45 / **60** / **115** mm |
+| R | 100 mm | **80** mm |
+| Postura d / H | 70 / 90 mm | 60 / 100 mm |
+| Torque fémur, peor punto | 0,555 N·m ❌ (> 0,54) | 0,506 N·m ✅ (FS 2,14) |
+| Altura libre | 52,5 mm ❌ | 62,5 mm ✅ |
+| Estabilidad | 77,5 mm | 62 mm ✅ |
+
+**Sensibilidad:** a 4,8 V el FS baja a 1,82; con el robot 200 g más pesado,
+a 1,91. Por eso la especificación pide servos a 6 V y un presupuesto de
+masa de ~1,9 kg.
+
+**Verificación en Gazebo con el diseño nuevo**
+
+| Prueba | Resultado |
+|---|---|
+| Torque estático en 3 patas, pie neutro (60 mm) | fémur 0,325 / tibia 0,012 N·m = modelo ✅ |
+| Torque estático en 3 patas, peor punto (90 mm) | fémur 0,506 / tibia 0,188 N·m = modelo ✅ |
+| D8 de pie 60 s | 110,00 mm, variación ±0,00 mm ✅ |
+| D11 velocidad (5 pruebas) | error 8,9–14,5 %, el cuerpo baja ≤ 3 mm ✅ |
+| Integración (8 puntos) | 8/8 ✅ |
+| Tests | 80/80 ✅ (`test_design_study.py`: las medidas actuales cumplen todo) |
+
+**Entregables:** D20 cotas ideales ✅ · D21 gráficos (3 + layout) ✅ ·
+verificación en Gazebo (tarea T4) ✅ · D22
+[`docs/especificacion_diseno.md`](docs/especificacion_diseno.md) ✅.
+
+**Qué cambió en el proyecto**
+
+| Archivo | Cambio |
+|---|---|
+| `hexapod_params.xacro` | L2 80 → 60, L3 120 → 115, R 100 → 80 mm |
+| `config/gait.yaml` | postura de pie d 70 → 60, H 90 → 100 mm |
+| `hexapod_control/design_study.py` | modelo del estudio (nuevo, con tests) |
+| `analysis/dimension_study.py` | barrido, elección, sensibilidad y figuras |
+| Tests | leen las medidas desde `hexapod_params.xacro` en vez de tenerlas escritas |
+| `prueba_integracion.py` | la altura esperada sale de `gait.yaml` |
 
 ---
 

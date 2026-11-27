@@ -38,7 +38,7 @@ Tópicos:
 Parámetros (config/gait.yaml de hexapod_bringup):
     robot_description   URDF en texto: de ahí salen montaje y largos de las patas
     rate                frecuencia de publicación [Hz]
-    stand_radial        pie de pie: distancia horizontal eje de coxa → pie [m]
+    stand_radial        pie de pie: distancia horizontal eje del FÉMUR → pie [m]
     stand_height        pie de pie: altura del eje de la coxa sobre el pie [m]
     tuck_radial, tuck_height   lo mismo, con las patas recogidas
     tuck_time, stand_time      duración de cada fase [s]
@@ -77,7 +77,7 @@ class GaitNode(Node):
         super().__init__('gait_node')
         p = {name: self.declare_parameter(name, default).value for name, default in (
             ('robot_description', ''), ('rate', 50.0),
-            ('stand_radial', 0.070), ('stand_height', 0.090),
+            ('stand_radial', 0.060), ('stand_height', 0.100),
             ('tuck_radial', 0.080), ('tuck_height', 0.030),
             ('tuck_time', 1.0), ('stand_time', 2.5),
             ('period', 1.0), ('duty', 0.5), ('step_height', 0.03), ('max_step', 0.06),

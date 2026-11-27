@@ -7,11 +7,11 @@ gait_node:
   ros__parameters:
     rate: 50.0              # [Hz] publicación a /legs_controller/commands
 
-    # Postura de pie [provisorio, la revisa E8]. 70 mm cumple la cota
-    # estática d ≤ 88 mm del plan; con 90 mm el cuerpo queda a 100 mm del
-    # suelo y la batería a ~52 mm.
-    stand_radial: 0.070
-    stand_height: 0.090
+    # Postura de pie (estudio de dimensiones E8): d = 60 mm deja el fémur con
+    # factor de seguridad 2,14 en el peor punto del paso; H = 100 mm deja la
+    # batería a 62,5 mm del suelo (mínimo pedido: 60). Antes: 70 y 90 mm.
+    stand_radial: 0.060
+    stand_height: 0.100
 
     # Patas recogidas: el cuerpo descansa sobre la batería y los pies
     # quedan apenas sobre el suelo.
